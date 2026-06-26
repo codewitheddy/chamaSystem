@@ -22,7 +22,7 @@ class Command(BaseCommand):
         # Trial expiring in 7 days
         trial_expiring = Chama.objects.filter(
             plan=Chama.PLAN_FREE,
-            trial_ends__date=warning_date,
+            trial_ends=warning_date,
             is_active=True,
         )
         for chama in trial_expiring:
@@ -32,7 +32,7 @@ class Command(BaseCommand):
         # Trial expiring tomorrow
         trial_tomorrow = Chama.objects.filter(
             plan=Chama.PLAN_FREE,
-            trial_ends__date=today + timedelta(days=1),
+            trial_ends=today + timedelta(days=1),
             is_active=True,
         )
         for chama in trial_tomorrow:
@@ -42,7 +42,7 @@ class Command(BaseCommand):
         # Paid subscription expiring in 7 days
         sub_expiring = Chama.objects.filter(
             plan__in=[Chama.PLAN_BASIC, Chama.PLAN_STANDARD, Chama.PLAN_ENTERPRISE],
-            subscription_end__date=warning_date,
+            subscription_end=warning_date,
             is_active=True,
         )
         for chama in sub_expiring:
@@ -91,7 +91,8 @@ class Command(BaseCommand):
                     f"Dear {chama.name} Admin,\n\n"
                     f"Your 30-day free trial expires in {days_left} day(s).\n\n"
                     f"Upgrade to Basic (KES 500/mo) or Standard (KES 999/mo) to keep access.\n\n"
-                    f"Contact us: hello@chamasystem.co.ke\n\nChamaSystem"
+                    f"Log in at https://{chama.slug}.marid.co.ke/subscription/ to upgrade.\n\n"
+                    f"Need help? Email us at {settings.BILLING_CONTACT_EMAIL}\n\nChamaSystem"
                 )
             else:
                 subject = f"Your ChamaSystem subscription expires in {days_left} day(s)"
@@ -99,7 +100,8 @@ class Command(BaseCommand):
                     f"Dear {chama.name} Admin,\n\n"
                     f"Your subscription expires in {days_left} day(s).\n\n"
                     f"Please renew to avoid service interruption.\n\n"
-                    f"Contact us: hello@chamasystem.co.ke\n\nChamaSystem"
+                    f"Log in at https://{chama.slug}.marid.co.ke/subscription/ to renew.\n\n"
+                    f"Need help? Email us at {settings.BILLING_CONTACT_EMAIL}\n\nChamaSystem"
                 )
 
             for profile in admins:

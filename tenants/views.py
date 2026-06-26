@@ -141,6 +141,28 @@ class ChamaSignupView(View):
             scheme = 'http' if is_local else 'https'
             redirect_url = f"{scheme}://{chama.slug}.{base_domain}/accounts/login/"
 
+            # Send welcome email
+            try:
+                from django.core.mail import send_mail
+                send_mail(
+                    subject=f"Welcome to ChamaSystem — {chama.name} is ready!",
+                    message=(
+                        f"Dear {d['admin_name']},\n\n"
+                        f"Your chama has been registered successfully.\n\n"
+                        f"Chama name : {chama.name}\n"
+                        f"Your login : {username}\n"
+                        f"Login URL  : {redirect_url}\n\n"
+                        f"You have a 30-day free trial. After that, subscribe to keep access.\n\n"
+                        f"Need help? Reply to this email.\n\n"
+                        f"— The ChamaSystem Team"
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[d['admin_email']],
+                    fail_silently=True,
+                )
+            except Exception:
+                pass
+
             return render(request, 'tenants/signup_success.html', {
                 'chama': chama,
                 'username': username,
@@ -153,10 +175,7 @@ class ChamaSignupView(View):
 @staff_required
 class SuperAdminDashboardView(View):
     def get(self, request):
-        from django.db.models import Sum, Count, Q
-        from members.models import Member
-        from contributions.models import Contribution
-        from loans.models import Loan
+        from django.db.models import Count, Sum
         from decimal import Decimal
 
         chamas = Chama.objects.annotate(
@@ -165,38 +184,24 @@ class SuperAdminDashboardView(View):
 
         total_chamas = chamas.count()
         active_chamas = chamas.filter(is_active=True).count()
-        total_members = Member.objects.count()
-        total_contributions = Contribution.objects.filter(
-            is_voided=False).aggregate(t=Sum('amount'))['t'] or 0
-        total_loans = Loan.objects.aggregate(t=Sum('loan_amount'))['t'] or 0
-        total_loan_balance = sum(l.balance for l in Loan.objects.filter(
-            status__in=['active', 'late']))
 
-        # ── Subscription revenue ──────────────────────────────────────────────
+        # Only aggregate chama-level subscription data — no member/financial details
         total_platform_revenue = Chama.objects.aggregate(
             t=Sum('total_revenue'))['t'] or Decimal('0')
-        paid_chama_count = chamas.filter(plan__in=['growth', 'enterprise']).count()
-        free_chama_count = chamas.filter(plan='free').count()
         mrr = chamas.filter(
-            is_active=True, plan__in=['growth', 'enterprise']
+            is_active=True,
+            plan__in=[Chama.PLAN_BASIC, Chama.PLAN_STANDARD, Chama.PLAN_ENTERPRISE]
         ).aggregate(t=Sum('plan_price'))['t'] or Decimal('0')
+        paid_chama_count = chamas.filter(
+            plan__in=[Chama.PLAN_BASIC, Chama.PLAN_STANDARD, Chama.PLAN_ENTERPRISE]
+        ).count()
+        free_chama_count = chamas.filter(plan=Chama.PLAN_FREE).count()
 
-        # Per-chama breakdown
-        chama_stats = []
-        for chama in chamas:
-            members = Member.objects.filter(chama=chama)
-            contribs = Contribution.objects.filter(
-                member__chama=chama, is_voided=False
-            ).aggregate(t=Sum('amount'))['t'] or 0
-            loans = Loan.objects.filter(
-                member__chama=chama
-            ).aggregate(t=Sum('loan_amount'))['t'] or 0
-            chama_stats.append({
-                'chama': chama,
-                'members': members.filter(status='active').count(),
-                'contributions': contribs,
-                'loans': loans,
-            })
+        # Per-chama stats — only member count, no financial data
+        chama_stats = [
+            {'chama': c, 'members': c.member_count}
+            for c in chamas
+        ]
 
         from .models import SubscriptionPaymentRequest
         pending_payments = SubscriptionPaymentRequest.objects.filter(
@@ -208,10 +213,6 @@ class SuperAdminDashboardView(View):
             'chama_stats': chama_stats,
             'total_chamas': total_chamas,
             'active_chamas': active_chamas,
-            'total_members': total_members,
-            'total_contributions': total_contributions,
-            'total_loans': total_loans,
-            'total_loan_balance': total_loan_balance,
             'total_platform_revenue': total_platform_revenue,
             'mrr': mrr,
             'paid_chama_count': paid_chama_count,
