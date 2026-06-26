@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}{% if object %}Edit{% else %}Add{% endif %} Loan Product{% endblock %}
+{% block page_title %}{% if object %}Edit{% else %}New{% endif %} Loan Product{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-sliders me-2"></i>Product Configuration</div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Product Name</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">Loan Type</label>
+                            {{ form.loan_type }}
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">Interest Method</label>
+                            {{ form.interest_method }}
+                            <div class="form-text">Reducing = on remaining balance. Fixed = on original principal.</div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">Monthly Rate (%)</label>
+                            {{ form.interest_rate_percent }}
+                            <div class="form-text">Ignored when method is "No Interest".</div>
+                            {% if form.interest_rate_percent.errors %}<div class="text-danger small mt-1">{{ form.interest_rate_percent.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">Max Repayment Period (months)</label>
+                            {{ form.max_duration_months }}
+                        </div>
+                    </div>
+
+                    <!-- Max amount section -->
+                    <div class="card mb-3" style="background:#f8fafc;border-color:#e2e8f0;">
+                        <div class="card-body pb-2">
+                            <p class="fw-semibold small mb-2">Maximum Loan Amount</p>
+                            <div class="mb-3">
+                                <label class="form-label small text-muted">Basis</label>
+                                {{ form.max_amount_basis }}
+                                <div class="form-text">
+                                    <span id="basis-hint"></span>
+                                </div>
+                            </div>
+                            <div id="fixed-amount-row" class="mb-2" style="display:none;">
+                                <label class="form-label small text-muted">Fixed Amount (KES)</label>
+                                {{ form.max_amount }}
+                                {% if form.max_amount.errors %}<div class="text-danger small mt-1">{{ form.max_amount.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Notes</label>
+                        {{ form.notes }}
+                    </div>
+                    <div class="mb-4 form-check">
+                        {{ form.is_active }}
+                        <label class="form-check-label small">Active (visible when issuing loans)</label>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-1"></i>Save Product
+                        </button>
+                        <a href="{% url 'loans:product_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const basisSelect = document.getElementById('id_max_amount_basis');
+const fixedRow = document.getElementById('fixed-amount-row');
+const basisHint = document.getElementById('basis-hint');
+
+const hints = {
+    'none': 'No limit — members can request any amount.',
+    'contributions': "Limit is each member's total contributions at the time of application.",
+    'fixed': 'A single fixed KES ceiling applies to all members.',
+};
+
+function updateBasis() {
+    const val = basisSelect.value;
+    fixedRow.style.display = val === 'fixed' ? '' : 'none';
+    basisHint.textContent = hints[val] || '';
+}
+
+basisSelect.addEventListener('change', updateBasis);
+updateBasis(); // run on load
+</script>
+{% endblock %}

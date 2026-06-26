@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% block title %}Members{% endblock %}
+{% block page_title %}Members{% endblock %}
+
+{% block content %}
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-4">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-blue"><i class="bi bi-people"></i></div>
+                <div>
+                    <div class="stat-label">Active Members</div>
+                    <div class="stat-value">{{ active_count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-rose"><i class="bi bi-person-slash"></i></div>
+                <div>
+                    <div class="stat-label">Disabled Members</div>
+                    <div class="stat-value">{{ disabled_count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-teal"><i class="bi bi-people-fill"></i></div>
+                <div>
+                    <div class="stat-label">Total</div>
+                    <div class="stat-value">{{ active_count|add:disabled_count|add:exited_count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toolbar -->
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <form class="d-flex gap-2 align-items-center flex-wrap" method="get">
+        <input type="hidden" name="status" value="{{ status }}">
+        <input type="hidden" name="sort" value="{{ sort }}">
+        <input type="text" name="q" value="{{ q }}" class="form-control form-control-sm"
+               placeholder="Search name or phone..." style="width:220px;">
+        <button class="btn btn-sm btn-outline-secondary">Search</button>
+        {% if q %}<a href="?status={{ status }}&sort={{ sort }}" class="btn btn-sm btn-outline-danger">Clear</a>{% endif %}
+    </form>
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+        <select class="form-select form-select-sm" style="width:auto;"
+                onchange="window.location='?status={{ status }}&sort='+this.value+'{% if q %}&q={{ q }}{% endif %}'">
+            <option value="az" {% if sort == 'az' %}selected{% endif %}>A → Z</option>
+            <option value="za" {% if sort == 'za' %}selected{% endif %}>Z → A</option>
+            <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest First</option>
+            <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Oldest First</option>
+        </select>
+        <a href="{% url 'members:add' %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-person-plus me-1"></i>Add Member
+        </a>
+        <a href="{% url 'members:import' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-upload me-1"></i>Import CSV
+        </a>
+    </div>
+</div>
+
+<!-- Status tabs -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="d-flex gap-1">
+            <a href="?status=active&sort={{ sort }}{% if q %}&q={{ q }}{% endif %}"
+               class="btn btn-sm {% if status == 'active' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                Active <span class="badge bg-white text-dark ms-1">{{ active_count }}</span>
+            </a>
+            <a href="?status=disabled&sort={{ sort }}{% if q %}&q={{ q }}{% endif %}"
+               class="btn btn-sm {% if status == 'disabled' %}btn-warning{% else %}btn-outline-secondary{% endif %}">
+                Disabled <span class="badge bg-white text-dark ms-1">{{ disabled_count }}</span>
+            </a>
+            <a href="?status=exited&sort={{ sort }}{% if q %}&q={{ q }}{% endif %}"
+               class="btn btn-sm {% if status == 'exited' %}btn-danger{% else %}btn-outline-secondary{% endif %}">
+                Exited <span class="badge bg-white text-dark ms-1">{{ exited_count }}</span>
+            </a>
+            <a href="?status=all&sort={{ sort }}{% if q %}&q={{ q }}{% endif %}"
+               class="btn btn-sm {% if status == 'all' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
+                All
+            </a>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'members:list_print' %}?status={{ status }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-printer me-1"></i>Print
+            </a>
+            <a href="{% url 'members:list_csv' %}?status={{ status }}" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-filetype-csv me-1"></i>CSV
+            </a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Reg. Fee</th>
+                    <th>Joined</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in members %}
+                <tr {% if not m.is_active %}style="opacity:0.6;"{% endif %}>
+                    <td class="text-muted" style="font-size:0.8rem;">{{ forloop.counter }}</td>
+                    <td>
+                        <a href="{% url 'members:detail' m.pk %}" class="text-decoration-none fw-semibold">
+                            {{ m.name }}
+                        </a>
+                        {% if m.status == 'disabled' %}
+                        <span class="badge ms-1" style="background:#fff1f2;color:#e11d48;font-size:0.7rem;">Disabled</span>
+                        {% elif m.status == 'exited' %}
+                        <span class="badge ms-1" style="background:#f1f5f9;color:#475569;font-size:0.7rem;">Exited</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ m.phone }}</td>
+                    <td>KES {{ m.registration_fee }}</td>
+                    <td>{{ m.date_joined }}</td>
+                    <td>
+                        {% if m.status == 'active' %}
+                            <span class="badge" style="background:#f0fdf4;color:#16a34a;">Active</span>
+                        {% elif m.status == 'exited' %}
+                            <span class="badge" style="background:#f1f5f9;color:#475569;">Exited</span>
+                        {% else %}
+                            <span class="badge" style="background:#fff1f2;color:#e11d48;">Disabled</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="{% url 'members:detail' m.pk %}" class="btn btn-sm btn-outline-secondary" title="View">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            {% if m.status == 'exited' %}
+                            <a href="{% url 'members:exited_statement' m.pk %}" class="btn btn-sm btn-outline-primary" title="Statement">
+                                <i class="bi bi-printer"></i>
+                            </a>
+                            {% else %}
+                            <a href="{% url 'members:edit' m.pk %}" class="btn btn-sm btn-outline-warning" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% if m.status == 'active' %}
+                            <a href="{% url 'members:disable' m.pk %}" class="btn btn-sm btn-outline-secondary" title="Disable">
+                                <i class="bi bi-person-slash"></i>
+                            </a>
+                            <a href="{% url 'members:exit' m.pk %}" class="btn btn-sm btn-outline-danger" title="Exit Member">
+                                <i class="bi bi-door-open"></i>
+                            </a>
+                            {% elif m.status == 'disabled' %}
+                            <form method="post" action="{% url 'members:enable' m.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-success" title="Re-enable">
+                                    <i class="bi bi-person-check"></i>
+                                </button>
+                            </form>
+                            <a href="{% url 'members:exit' m.pk %}" class="btn btn-sm btn-outline-danger" title="Exit Member">
+                                <i class="bi bi-door-open"></i>
+                            </a>
+                            {% endif %}
+                            <a href="{% url 'members:delete' m.pk %}" class="btn btn-sm btn-outline-danger" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-5">
+                        <i class="bi bi-people" style="font-size:2rem;display:block;margin-bottom:0.5rem;"></i>
+                        No members found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-white border-top">
+        {% include 'includes/pagination.html' %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Void Payment{% endblock %}
+{% block page_title %}Void Payment{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-slash-circle me-2"></i>Void Payment</div>
+            <div class="card-body">
+                <div class="alert py-2 mb-3" style="background:#fffbeb;border-color:#fde68a;color:#92400e;font-size:0.875rem;">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    This will <strong>void</strong> the payment. The record is kept for audit purposes and the loan balance will be reversed.
+                </div>
+                <table class="table table-sm mb-3">
+                    <tr><td class="text-muted">Member</td><td class="fw-semibold">{{ payment.member.name }}</td></tr>
+                    <tr><td class="text-muted">Loan</td><td>KES {{ payment.loan.loan_amount|floatformat:2 }}</td></tr>
+                    <tr><td class="text-muted">Amount</td><td class="text-danger fw-semibold">KES {{ payment.amount|floatformat:2 }}</td></tr>
+                    <tr><td class="text-muted">Date</td><td>{{ payment.date }}</td></tr>
+                </table>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">{{ form.reason.label }}</label>
+                        {{ form.reason }}
+                        {% if form.reason.errors %}<div class="text-danger small mt-1">{{ form.reason.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-slash-circle me-1"></i>Void Payment
+                        </button>
+                        <a href="{% url 'payments:list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

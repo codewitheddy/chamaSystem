@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Welfare Claims{% endblock %}
+{% block page_title %}Welfare Claims{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'welfare:claim_list' %}" class="btn btn-sm {% if not filter_status %}btn-primary{% else %}btn-outline-secondary{% endif %}">All</a>
+        {% for val, label in status_choices %}
+        <a href="?status={{ val }}" class="btn btn-sm {% if filter_status == val %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+            {{ label }}{% if val == 'pending' and pending_count %} <span class="badge bg-warning text-dark ms-1">{{ pending_count }}</span>{% endif %}
+        </a>
+        {% endfor %}
+    </div>
+    <div class="d-flex gap-2">
+        {% if user.profile.is_treasurer %}
+        <a href="{% url 'welfare:claim_add' %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus me-1"></i>New Claim
+        </a>
+        {% endif %}
+        <a href="{% url 'welfare:claim_list_print' %}{% if filter_status %}?status={{ filter_status }}{% endif %}" target="_blank" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-printer me-1"></i>Print
+        </a>
+        <a href="{% url 'welfare:claim_list_csv' %}" class="btn btn-sm btn-outline-success">
+            <i class="bi bi-filetype-csv me-1"></i>CSV
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><i class="bi bi-heart-pulse me-2"></i>Claims</div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr><th>#</th><th>Member</th><th>Type</th><th>Beneficiary</th><th>Requested</th><th>Approved</th><th>Disbursed</th><th>Status</th><th>Filed</th><th></th></tr>
+            </thead>
+            <tbody>
+            {% for c in claims %}
+            <tr>
+                <td class="text-muted">{{ c.pk }}</td>
+                <td class="fw-semibold">{{ c.member.name }}</td>
+                <td><span class="badge bg-secondary">{{ c.get_claim_type_display }}</span></td>
+                <td>{{ c.beneficiary }}{% if c.beneficiary_relation %} <span class="text-muted small">({{ c.beneficiary_relation }})</span>{% endif %}</td>
+                <td>KES {{ c.amount_requested|floatformat:2 }}</td>
+                <td>{% if c.amount_approved %}KES {{ c.amount_approved|floatformat:2 }}{% else %}—{% endif %}</td>
+                <td>{% if c.amount_disbursed %}<span style="color:#16a34a;">KES {{ c.amount_disbursed|floatformat:2 }}</span>{% else %}—{% endif %}</td>
+                <td>
+                    {% if c.status == 'pending' %}<span class="badge bg-warning text-dark">Pending</span>
+                    {% elif c.status == 'approved' %}<span class="badge bg-info text-dark">Approved</span>
+                    {% elif c.status == 'disbursed' %}<span class="badge bg-success">Disbursed</span>
+                    {% else %}<span class="badge bg-danger">Rejected</span>{% endif %}
+                </td>
+                <td class="text-muted small">{{ c.date_filed }}</td>
+                <td><a href="{% url 'welfare:claim_detail' c.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="10" class="text-center text-muted py-4">No claims found.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

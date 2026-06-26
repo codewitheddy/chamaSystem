@@ -1,0 +1,43 @@
+{% extends "includes/print_base.html" %}
+{% block print_title %}Loans{% endblock %}
+{% block print_heading %}Loans Report{% endblock %}
+{% block print_meta %}Total: {{ loans|length }} loans &nbsp;|&nbsp; {% now "d M Y" %}{% endblock %}
+{% block print_body %}
+<table>
+  <thead>
+    <tr><th>#</th><th>Member</th><th>Amount</th><th>Interest</th><th>Total</th><th>Paid</th><th>Balance</th><th>Date</th><th>Due</th><th>Status</th></tr>
+  </thead>
+  <tbody>
+  {% for l in loans %}
+  <tr>
+    <td>{{ forloop.counter }}</td>
+    <td><strong>{{ l.member.name }}</strong></td>
+    <td>KES {{ l.loan_amount|floatformat:2 }}</td>
+    <td>KES {{ l.interest_amount|floatformat:2 }}</td>
+    <td>KES {{ l.total_payable|floatformat:2 }}</td>
+    <td>KES {{ l.amount_paid|floatformat:2 }}</td>
+    <td>KES {{ l.balance|floatformat:2 }}</td>
+    <td>{{ l.date_taken }}</td>
+    <td>{{ l.due_date|default:"—" }}</td>
+    <td>
+      {% if l.status == 'cleared' %}<span class="badge-green">Cleared</span>
+      {% elif l.status == 'late' %}<span class="badge-red">Late</span>
+      {% else %}<span class="badge-amber">Active</span>{% endif %}
+    </td>
+  </tr>
+  {% empty %}<tr><td colspan="10">No loans found.</td></tr>
+  {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr>
+      <td colspan="2">Totals</td>
+      <td>KES {{ total_issued|floatformat:2 }}</td>
+      <td></td>
+      <td></td>
+      <td>KES {{ total_paid|floatformat:2 }}</td>
+      <td>KES {{ total_balance|floatformat:2 }}</td>
+      <td colspan="3"></td>
+    </tr>
+  </tfoot>
+</table>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Attendance — {{ agm.title }}{% endblock %}
+{% block page_title %}Attendance — {{ agm.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-8">
+<div class="card">
+    <div class="card-header"><i class="bi bi-people me-2"></i>Mark Attendance — {{ agm.title }}</div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead><tr><th>Member</th><th style="width:80px">Present</th><th>Proxy / Representative</th></tr></thead>
+                    <tbody>
+                    {% for row in member_rows %}
+                    <tr>
+                        <td class="fw-semibold align-middle">{{ row.member.name }}</td>
+                        <td class="text-center align-middle">
+                            <input type="checkbox" name="present_{{ row.member.pk }}"
+                                   class="form-check-input"
+                                   {% if row.present %}checked{% endif %}>
+                        </td>
+                        <td>
+                            <input type="text" name="proxy_{{ row.member.pk }}"
+                                   class="form-control form-control-sm"
+                                   placeholder="Proxy name (if represented)"
+                                   value="{{ row.proxy }}">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <button type="submit" class="btn btn-primary">Save Attendance</button>
+                <a href="{% url 'agm:detail' agm.pk %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+</div>
+{% endblock %}

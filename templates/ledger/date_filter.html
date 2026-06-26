@@ -1,0 +1,12 @@
+<form method="get" class="d-flex gap-2 align-items-end flex-wrap mb-4">
+    <div>
+        <label class="form-label small fw-semibold mb-1">From</label>
+        <input type="date" name="date_from" class="form-control form-control-sm" value="{{ date_from }}">
+    </div>
+    <div>
+        <label class="form-label small fw-semibold mb-1">To</label>
+        <input type="date" name="date_to" class="form-control form-control-sm" value="{{ date_to }}">
+    </div>
+    <button type="submit" class="btn btn-sm btn-primary">Apply</button>
+    <span class="text-muted small align-self-center">Period: {{ date_from }} → {{ date_to }}</span>
+</form>

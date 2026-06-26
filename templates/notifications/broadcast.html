@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Broadcast Message{% endblock %}
+{% block page_title %}Broadcast to All Members{% endblock %}
+
+{% block content %}
+<div class="row g-3 justify-content-center">
+<div class="col-lg-7">
+
+<div class="card mb-3">
+    <div class="card-header"><i class="bi bi-megaphone me-2"></i>Send Group Message</div>
+    <div class="card-body">
+        <p class="text-muted small mb-4">
+            This message will be sent to <strong>all active members</strong> on the selected channels.
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Subject</label>
+                <input type="text" name="subject" class="form-control"
+                       value="{{ form.subject.value|default:'' }}"
+                       placeholder="e.g. Monthly Contribution Reminder" required>
+                {% if form.subject.errors %}<div class="text-danger small">{{ form.subject.errors }}</div>{% endif %}
+            </div>
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Message</label>
+                <textarea name="message" class="form-control" rows="7"
+                          placeholder="Write your message here..." required>{{ form.message.value|default:'' }}</textarea>
+                {% if form.message.errors %}<div class="text-danger small">{{ form.message.errors }}</div>{% endif %}
+                <div class="form-text">WhatsApp and SMS messages are sent as plain text. Keep it concise.</div>
+            </div>
+
+            <!-- Channel selector -->
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Send via</label>
+                <div class="row g-2">
+
+                    <!-- Email -->
+                    <div class="col-sm-4">
+                        <label class="d-flex align-items-center gap-2 p-3 rounded border cursor-pointer"
+                               style="cursor:pointer;background:#f8fafc;">
+                            <input class="form-check-input mt-0" type="checkbox" name="send_email" id="ch_email"
+                                   {% if form.send_email.value != False %}checked{% endif %}>
+                            <div>
+                                <div class="d-flex align-items-center gap-1">
+                                    <i class="bi bi-envelope-fill text-info"></i>
+                                    <span class="fw-semibold small">Email</span>
+                                </div>
+                                <div class="text-muted" style="font-size:.72rem;">Members with email set</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- SMS -->
+                    <div class="col-sm-4">
+                        <label class="d-flex align-items-center gap-2 p-3 rounded border cursor-pointer"
+                               style="cursor:pointer;background:#f8fafc;{% if not sms_configured %}opacity:.6;{% endif %}">
+                            <input class="form-check-input mt-0" type="checkbox" name="send_sms" id="ch_sms"
+                                   {% if form.send_sms.value != False and sms_configured %}checked{% endif %}
+                                   {% if not sms_configured %}disabled{% endif %}>
+                            <div>
+                                <div class="d-flex align-items-center gap-1">
+                                    <i class="bi bi-phone-fill text-warning"></i>
+                                    <span class="fw-semibold small">SMS</span>
+                                    {% if not sms_configured %}
+                                    <span class="badge bg-secondary" style="font-size:.6rem;">Not set up</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-muted" style="font-size:.72rem;">Africa's Talking</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- WhatsApp -->
+                    <div class="col-sm-4">
+                        <label class="d-flex align-items-center gap-2 p-3 rounded border cursor-pointer"
+                               style="cursor:pointer;background:#f8fafc;{% if not whatsapp_configured %}opacity:.6;{% endif %}">
+                            <input class="form-check-input mt-0" type="checkbox" name="send_whatsapp" id="ch_wa"
+                                   {% if not whatsapp_configured %}disabled{% endif %}>
+                            <div>
+                                <div class="d-flex align-items-center gap-1">
+                                    <i class="bi bi-whatsapp" style="color:#25D366;"></i>
+                                    <span class="fw-semibold small">WhatsApp</span>
+                                    {% if whatsapp_configured %}
+                                    <span class="badge bg-success" style="font-size:.6rem;">Ready</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary" style="font-size:.6rem;">Not set up</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-muted" style="font-size:.72rem;">Twilio Business API</div>
+                            </div>
+                        </label>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-send me-1"></i>Send Broadcast
+                </button>
+                <a href="{% url 'notifications:inbox' %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- WhatsApp setup guide (shown when not configured) -->
+{% if not whatsapp_configured %}
+<div class="card border-0" style="background:#f0fdf4;border:1px solid #bbf7d0!important;">
+    <div class="card-body">
+        <h6 class="fw-bold mb-2" style="color:#15803d;">
+            <i class="bi bi-whatsapp me-2" style="color:#25D366;"></i>Enable WhatsApp Notifications
+        </h6>
+        <p class="small text-muted mb-3">
+            Send messages directly to members' WhatsApp using Twilio's Business API.
+            Members receive messages from your registered WhatsApp Business number.
+        </p>
+        <ol class="small text-muted mb-3" style="padding-left:1.25rem;line-height:2;">
+            <li>Sign up at <a href="https://www.twilio.com" target="_blank">twilio.com</a> (free trial available)</li>
+            <li>Enable the WhatsApp sandbox or register a WhatsApp Business number</li>
+            <li>Add these to your <code>.env</code> file:</li>
+        </ol>
+        <pre style="background:#1e293b;color:#86efac;padding:1rem;border-radius:8px;font-size:.8rem;overflow-x:auto;">TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=your_auth_token
+TWILIO_WHATSAPP_FROM=whatsapp:+14155238886</pre>
+        <p class="small text-muted mt-2 mb-0">
+            <i class="bi bi-info-circle me-1"></i>
+            The sandbox number <code>+14155238886</code> works for testing. For production, register your own WhatsApp Business number.
+        </p>
+    </div>
+</div>
+{% endif %}
+
+</div>
+</div>
+{% endblock %}

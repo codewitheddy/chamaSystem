@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Add User{% endblock %}
+{% block page_title %}Add User{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-person-plus me-2"></i>New System User</div>
+      <div class="card-body">
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Display Name <span class="text-danger">*</span></label>
+            {{ form.display_name }}
+            {% if form.display_name.errors %}<div class="text-danger small mt-1">{{ form.display_name.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Preferred Username <span class="text-muted">(optional)</span></label>
+            <div class="input-group">
+              {{ form.preferred_username }}
+              <span class="input-group-text text-muted small" id="username-suffix">.{{ request.chama.slug|default:"chama" }}</span>
+            </div>
+            <div class="text-muted mt-1" style="font-size:.78rem;">
+              Leave blank to auto-generate from the display name.
+              Letters, digits, underscores only.
+            </div>
+            {% if form.preferred_username.errors %}<div class="text-danger small mt-1">{{ form.preferred_username.errors.0 }}</div>{% endif %}
+            <!-- Live preview -->
+            <div id="username-preview" class="mt-1" style="font-size:.8rem;display:none;">
+              Login will be: <strong id="preview-val"></strong>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Email</label>
+            {{ form.email }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Role <span class="text-danger">*</span></label>
+            {{ form.role }}
+            <div class="mt-2 p-2 rounded" style="background:#f8fafc;font-size:.82rem;color:#64748b;">
+              <strong>Admin</strong> — full access, can manage users<br>
+              <strong>Treasurer</strong> — record contributions, loans, payments, expenses<br>
+              <strong>Read Only</strong> — view all data, no changes
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Password <span class="text-danger">*</span></label>
+            {{ form.password1 }}
+            {% if form.password1.errors %}<div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Confirm Password <span class="text-danger">*</span></label>
+            {{ form.password2 }}
+            {% if form.password2.errors %}<div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-person-check me-1"></i>Create User</button>
+            <a href="{% url 'accounts:users' %}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const suffix = document.getElementById('username-suffix').textContent.trim();
+const input  = document.getElementById('id_preferred_username');
+const preview = document.getElementById('username-preview');
+const previewVal = document.getElementById('preview-val');
+
+input.addEventListener('input', function() {
+  const val = this.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+  if (val) {
+    previewVal.textContent = val + suffix;
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+});
+</script>
+{% endblock %}

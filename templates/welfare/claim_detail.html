@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}Claim #{{ claim.pk }}{% endblock %}
+{% block page_title %}Welfare Claim #{{ claim.pk }}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <!-- Claim Info -->
+    <div class="col-md-5">
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Claim Details</span>
+                <div class="d-flex gap-2 align-items-center">
+                {% if claim.status == 'pending' %}<span class="badge bg-warning text-dark">Pending</span>
+                {% elif claim.status == 'approved' %}<span class="badge bg-info text-dark">Approved</span>
+                {% elif claim.status == 'disbursed' %}<span class="badge bg-success">Disbursed</span>
+                {% else %}<span class="badge bg-danger">Rejected</span>{% endif %}
+                {% if claim.status == 'pending' and user.profile.is_treasurer %}
+                <a href="{% url 'welfare:claim_edit' claim.pk %}" class="btn btn-sm btn-outline-warning">
+                    <i class="bi bi-pencil me-1"></i>Edit
+                </a>
+                {% endif %}
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr><td class="text-muted ps-3">Member</td><td class="fw-semibold pe-3">{{ claim.member.name }}</td></tr>
+                    <tr><td class="text-muted ps-3">Type</td><td class="pe-3">{{ claim.get_claim_type_display }}</td></tr>
+                    <tr><td class="text-muted ps-3">Beneficiary</td><td class="pe-3">{{ claim.beneficiary }}{% if claim.beneficiary_relation %} ({{ claim.beneficiary_relation }}){% endif %}</td></tr>
+                    <tr><td class="text-muted ps-3">Description</td><td class="pe-3">{{ claim.description }}</td></tr>
+                    <tr><td class="text-muted ps-3">Requested</td><td class="fw-bold pe-3">KES {{ claim.amount_requested|floatformat:2 }}</td></tr>
+                    {% if claim.amount_approved %}
+                    <tr><td class="text-muted ps-3">Approved</td><td class="pe-3" style="color:#0891b2;">KES {{ claim.amount_approved|floatformat:2 }}</td></tr>
+                    {% endif %}
+                    {% if claim.amount_disbursed %}
+                    <tr><td class="text-muted ps-3">Disbursed</td><td class="pe-3" style="color:#16a34a;">KES {{ claim.amount_disbursed|floatformat:2 }}</td></tr>
+                    <tr><td class="text-muted ps-3">Method</td><td class="pe-3">{{ claim.get_disbursement_method_display }}</td></tr>
+                    {% if claim.disbursement_ref %}
+                    <tr><td class="text-muted ps-3">Reference</td><td class="pe-3">{{ claim.disbursement_ref }}</td></tr>
+                    {% endif %}
+                    {% endif %}
+                    <tr><td class="text-muted ps-3">Filed</td><td class="pe-3">{{ claim.date_filed }}</td></tr>
+                    {% if claim.date_approved %}<tr><td class="text-muted ps-3">Reviewed</td><td class="pe-3">{{ claim.date_approved }}</td></tr>{% endif %}
+                    {% if claim.date_disbursed %}<tr><td class="text-muted ps-3">Disbursed On</td><td class="pe-3">{{ claim.date_disbursed }}</td></tr>{% endif %}
+                    {% if claim.rejection_reason %}<tr><td class="text-muted ps-3">Rejection</td><td class="pe-3 text-danger">{{ claim.rejection_reason }}</td></tr>{% endif %}
+                </table>
+            </div>
+            {% if claim.document %}
+            <div class="card-footer">
+                <a href="{{ claim.document.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-file-earmark me-1"></i>View Document
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Contributions raised for this claim -->
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-cash-stack me-2"></i>Contributions Raised</span>
+                <span class="badge bg-success">KES {{ total_raised|floatformat:2 }}</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Member</th><th>Amount</th><th>Date</th></tr></thead>
+                    <tbody>
+                    {% for c in contributions %}
+                    <tr>
+                        <td>{{ c.member.name }}</td>
+                        <td style="color:#16a34a;">KES {{ c.amount|floatformat:2 }}</td>
+                        <td class="text-muted small">{{ c.date }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="text-muted text-center py-2">No contributions yet.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if user.profile.is_treasurer %}
+            <div class="card-footer d-flex gap-2">
+                <a href="{% url 'welfare:contribution_add' %}?claim={{ claim.pk }}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-plus me-1"></i>Add Contribution
+                </a>
+                <a href="{% url 'welfare:bulk_contribution' %}?claim={{ claim.pk }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-people me-1"></i>Bulk (All Members)
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <a href="{% url 'welfare:claim_list' %}" class="btn btn-outline-secondary btn-sm">← Back</a>
+    </div>
+
+    <!-- Actions -->
+    {% if user.profile.is_treasurer %}
+    <div class="col-md-7">
+        {% if claim.status == 'pending' %}
+        <!-- Approve -->
+        <div class="card mb-3">
+            <div class="card-header text-success"><i class="bi bi-check-circle me-2"></i>Approve Claim</div>
+            <div class="card-body">
+                <form method="post" action="{% url 'welfare:claim_approve' claim.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Amount to Approve (KES)</label>
+                        {{ approval_form.amount_approved }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Notes (optional)</label>
+                        {{ approval_form.notes }}
+                    </div>
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="bi bi-check-lg me-1"></i>Approve
+                    </button>
+                </form>
+            </div>
+        </div>
+        <!-- Reject -->
+        <div class="card mb-3">
+            <div class="card-header text-danger"><i class="bi bi-x-circle me-2"></i>Reject Claim</div>
+            <div class="card-body">
+                <form method="post" action="{% url 'welfare:claim_reject' claim.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Reason for Rejection</label>
+                        {{ rejection_form.rejection_reason }}
+                    </div>
+                    <button type="submit" class="btn btn-danger btn-sm"
+                            onclick="return confirm('Reject this claim?')">
+                        <i class="bi bi-x-lg me-1"></i>Reject
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if claim.status == 'approved' %}
+        <!-- Disburse -->
+        <div class="card mb-3">
+            <div class="card-header" style="color:#16a34a;"><i class="bi bi-send me-2"></i>Disburse Payment</div>
+            <div class="card-body">
+                <form method="post" action="{% url 'welfare:claim_disburse' claim.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Amount to Disburse (KES)</label>
+                        {{ disbursement_form.amount_disbursed }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Payment Method</label>
+                        {{ disbursement_form.disbursement_method }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Reference (M-Pesa / Cheque)</label>
+                        {{ disbursement_form.disbursement_ref }}
+                    </div>
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="bi bi-send me-1"></i>Disburse
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if claim.status == 'disbursed' %}
+        <div class="alert" style="background:#f0fdf4;border-color:#bbf7d0;color:#15803d;">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            KES {{ claim.amount_disbursed|floatformat:2 }} disbursed on {{ claim.date_disbursed }}
+            via {{ claim.get_disbursement_method_display }}
+            {% if claim.disbursement_ref %}(Ref: {{ claim.disbursement_ref }}){% endif %}.
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

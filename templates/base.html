@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Chama System{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg: #1e2a3a;
+            --sidebar-hover: #2c3e52;
+            --sidebar-active: #2563eb;
+            --sidebar-text: #94a3b8;
+            --sidebar-text-active: #f1f5f9;
+            --sidebar-section: #475569;
+            --topbar-bg: #ffffff;
+            --body-bg: #f4f6f9;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        body {
+            background-color: var(--body-bg);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #1e293b;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            height: 100vh;
+            background: var(--sidebar-bg);
+            width: 248px;
+            position: fixed;
+            top: 0; left: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .sidebar .brand {
+            padding: 1.25rem 1.25rem 1rem;
+            border-bottom: 1px solid #2c3e52;
+            flex-shrink: 0;
+        }
+        .sidebar .brand h5 {
+            color: #f1f5f9;
+            margin: 0;
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 0.3px;
+        }
+        .sidebar .brand small {
+            color: var(--sidebar-text);
+            font-size: 0.72rem;
+        }
+        /* Scrollable nav area */
+        .sidebar-nav {
+            flex: 1 1 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: #2c3e52 transparent;
+        }
+        .sidebar-nav::-webkit-scrollbar { width: 4px; }
+        .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-nav::-webkit-scrollbar-thumb { background: #2c3e52; border-radius: 4px; }
+        .sidebar .nav-link {
+            color: var(--sidebar-text);
+            padding: 0.52rem 1rem;
+            border-radius: 6px;
+            margin: 1px 10px;
+            font-size: 0.875rem;
+            transition: background 0.15s, color 0.15s;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+        .sidebar .nav-link:hover {
+            background: var(--sidebar-hover);
+            color: var(--sidebar-text-active);
+        }
+        .sidebar .nav-link.active {
+            background: var(--sidebar-active);
+            color: #fff;
+        }
+        /* Dropdown toggle */
+        .sidebar .nav-dropdown-toggle {
+            color: var(--sidebar-text);
+            padding: 0.52rem 1rem;
+            border-radius: 6px;
+            margin: 1px 10px;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s, color 0.15s;
+        }
+        .sidebar .nav-dropdown-toggle:hover,
+        .sidebar .nav-dropdown-toggle[aria-expanded="true"] {
+            background: var(--sidebar-hover);
+            color: var(--sidebar-text-active);
+        }
+        .sidebar .nav-dropdown-toggle[aria-expanded="true"] .dd-arrow {
+            transform: rotate(90deg);
+        }
+        .sidebar .nav-dropdown-toggle.has-active {
+            color: var(--sidebar-text-active);
+        }
+        .dd-arrow {
+            margin-left: auto;
+            font-size: 0.7rem;
+            transition: transform 0.2s;
+            flex-shrink: 0;
+        }
+        /* Sub-items */
+        .sidebar-submenu {
+            padding-left: 0;
+            list-style: none;
+            margin: 0;
+        }
+        .sidebar-submenu .nav-link {
+            padding: 0.42rem 1rem 0.42rem 2.6rem;
+            font-size: 0.835rem;
+            margin: 1px 10px;
+        }
+        .sidebar .nav-section {
+            color: var(--sidebar-section);
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            padding: 1rem 1.25rem 0.3rem;
+            font-weight: 600;
+        }
+        .sidebar-footer {
+            padding: 0.9rem 1.25rem;
+            border-top: 1px solid #2c3e52;
+            flex-shrink: 0;
+        }
+        .sidebar-footer .username {
+            color: #f1f5f9;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        .sidebar-footer .role {
+            color: var(--sidebar-text);
+            font-size: 0.75rem;
+        }
+
+        /* Main */
+        .main-content {
+            margin-left: 248px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .topbar {
+            background: var(--topbar-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 0.7rem 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 99;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .topbar .page-heading {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #334155;
+            margin: 0;
+        }
+        .page-content { padding: 1.5rem; }
+
+        /* Cards */
+        .card {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .card-header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #334155;
+            padding: 0.85rem 1.25rem;
+        }
+
+        /* Stat cards */
+        .stat-card {
+            border-radius: 10px;
+            transition: box-shadow 0.15s;
+        }
+        .stat-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .stat-card .icon-box {
+            width: 46px; height: 46px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+        .stat-card .stat-label {
+            font-size: 0.78rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .stat-card .stat-value {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.2;
+        }
+
+        /* Accent colors — flat, no gradients */
+        .accent-blue   { background: #eff6ff; color: #2563eb; }
+        .accent-green  { background: #f0fdf4; color: #16a34a; }
+        .accent-amber  { background: #fffbeb; color: #d97706; }
+        .accent-violet { background: #f5f3ff; color: #7c3aed; }
+        .accent-rose   { background: #fff1f2; color: #e11d48; }
+        .accent-teal   { background: #f0fdfa; color: #0d9488; }
+        .accent-slate  { background: #1e2a3a; color: #f1f5f9; }
+
+        /* Tables */
+        .table { font-size: 0.875rem; }
+        .table thead th {
+            font-weight: 600;
+            color: #475569;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+            background: #f8fafc;
+        }
+        .table-hover tbody tr:hover { background: #f8fafc; }
+
+        /* Badges */
+        .badge { font-weight: 500; font-size: 0.75rem; }
+
+        /* Buttons */
+        .btn { font-size: 0.875rem; font-weight: 500; }
+        .btn-primary { background: #2563eb; border-color: #2563eb; }
+        .btn-primary:hover { background: #1d4ed8; border-color: #1d4ed8; }
+
+        /* Progress */
+        .progress { background: #e2e8f0; border-radius: 99px; }
+
+        /* Alerts */
+        .alert { font-size: 0.875rem; border-radius: 8px; }
+
+        /* ── Mobile / Tablet responsive ────────────────────────────────────── */
+
+        /* Overlay behind the open sidebar on small screens */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 99;
+        }
+        .sidebar-overlay.show { display: block; }
+
+        /* Hamburger toggle button (hidden on desktop) */
+        .sidebar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            padding: 0.4rem 0.5rem;
+            color: #334155;
+            font-size: 1.25rem;
+            line-height: 1;
+            cursor: pointer;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+        .sidebar-toggle:hover { background: #f1f5f9; }
+
+        @media (max-width: 991.98px) {
+            /* Sidebar slides in from left, hidden off-screen by default */
+            .sidebar {
+                position: fixed;
+                top: 0; left: 0;
+                height: 100dvh;
+                width: 260px;
+                transform: translateX(-100%);
+                transition: transform 0.25s ease;
+                z-index: 200;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            /* Main content takes full width */
+            .main-content { margin-left: 0; }
+
+            /* Show the hamburger */
+            .sidebar-toggle { display: flex; align-items: center; }
+
+            /* Topbar: give the heading some breathing room next to hamburger */
+            .topbar { gap: 0.5rem; padding: 0.6rem 1rem; }
+            .topbar .page-heading { font-size: 0.875rem; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        }
+
+        @media (max-width: 575.98px) {
+            /* Tighter page padding on phones */
+            .page-content { padding: 1rem 0.75rem; }
+
+            /* Cards — kill horizontal padding on very small screens */
+            .card-body { padding: 0.875rem; }
+
+            /* Stat cards stack cleanly */
+            .stat-card .stat-value { font-size: 1.15rem; }
+
+            /* Tables — horizontal scroll container */
+            .table-responsive { -webkit-overflow-scrolling: touch; }
+
+            /* Buttons in topbar: show icon only */
+            .topbar .btn-logout-text { display: none; }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+{% if user.is_authenticated %}
+<!-- Sidebar overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="d-flex">
+    <nav class="sidebar" id="sidebar">
+        <div class="brand">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h5><i class="bi bi-bank2 me-2"></i>{% if request.chama %}{{ request.chama.name }}{% else %}Chama System{% endif %}</h5>
+                    <small>{% if request.chama %}{{ request.chama.tagline|default:"Table Banking Manager" }}{% else %}Table Banking Manager{% endif %}</small>
+                </div>
+                <button class="d-lg-none btn btn-sm text-muted p-1 ms-2" id="sidebarClose" aria-label="Close navigation" style="line-height:1;">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="sidebar-nav">
+            <ul class="nav flex-column mt-1 pb-2">
+
+                <li class="nav-section">Main</li>
+                <li class="nav-item">
+                    {% if user.is_staff %}
+                    <a href="{% url 'tenants:dashboard' %}" class="nav-link">
+                        <i class="bi bi-speedometer2 me-2"></i>Superadmin Panel
+                    </a>
+                    {% else %}
+                    <a href="{% url 'dashboard:dashboard' %}" class="nav-link {% if request.resolver_match.app_name == 'dashboard' %}active{% endif %}">
+                        <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                    </a>
+                    {% endif %}
+                </li>
+
+                <li class="nav-section">Management</li>
+
+                <!-- Members dropdown -->
+                <li class="nav-item">
+                    <div class="nav-dropdown-toggle {% if request.resolver_match.app_name == 'members' %}has-active{% endif %}"
+                         data-bs-toggle="collapse" data-bs-target="#dd-members"
+                         aria-expanded="{% if request.resolver_match.app_name == 'members' %}true{% else %}false{% endif %}">
+                        <i class="bi bi-people me-2"></i>Members
+                        <i class="bi bi-chevron-right dd-arrow"></i>
+                    </div>
+                    <div id="dd-members" class="collapse {% if request.resolver_match.app_name == 'members' %}show{% endif %}">
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'members:list' %}" class="nav-link {% if request.resolver_match.url_name == 'list' and request.resolver_match.app_name == 'members' %}active{% endif %}">All Members</a></li>
+                            <li><a href="{% url 'members:add' %}" class="nav-link {% if request.resolver_match.url_name == 'add' and request.resolver_match.app_name == 'members' %}active{% endif %}">Add Member</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- Contributions dropdown -->
+                <li class="nav-item">
+                    <div class="nav-dropdown-toggle {% if request.resolver_match.app_name == 'contributions' %}has-active{% endif %}"
+                         data-bs-toggle="collapse" data-bs-target="#dd-contributions"
+                         aria-expanded="{% if request.resolver_match.app_name == 'contributions' %}true{% else %}false{% endif %}">
+                        <i class="bi bi-cash-stack me-2"></i>Contributions
+                        <i class="bi bi-chevron-right dd-arrow"></i>
+                    </div>
+                    <div id="dd-contributions" class="collapse {% if request.resolver_match.app_name == 'contributions' %}show{% endif %}">
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'contributions:list' %}" class="nav-link {% if request.resolver_match.url_name == 'list' and request.resolver_match.app_name == 'contributions' %}active{% endif %}">All Contributions</a></li>
+                            {% if user.profile.is_treasurer %}
+                            <li><a href="{% url 'contributions:bulk' %}" class="nav-link {% if request.resolver_match.url_name == 'bulk' %}active{% endif %}">Bulk Entry</a></li>
+                            {% endif %}
+                            <li><a href="{% url 'contributions:defaulters' %}" class="nav-link {% if request.resolver_match.url_name == 'defaulters' %}active{% endif %}">Defaulters</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- Loans dropdown -->
+                <li class="nav-item">
+                    <div class="nav-dropdown-toggle {% if request.resolver_match.app_name == 'loans' %}has-active{% endif %}"
+                         data-bs-toggle="collapse" data-bs-target="#dd-loans"
+                         aria-expanded="{% if request.resolver_match.app_name == 'loans' %}true{% else %}false{% endif %}">
+                        <i class="bi bi-credit-card me-2"></i>Loans
+                        <i class="bi bi-chevron-right dd-arrow"></i>
+                    </div>
+                    <div id="dd-loans" class="collapse {% if request.resolver_match.app_name == 'loans' %}show{% endif %}">
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'loans:list' %}" class="nav-link {% if request.resolver_match.url_name == 'list' and request.resolver_match.app_name == 'loans' and 'emergency' not in request.path %}active{% endif %}">All Loans</a></li>
+                            <li><a href="{% url 'loans:emergency_list' %}" class="nav-link {% if 'emergency' in request.path %}active{% endif %}">Emergency Loans</a></li>
+                            <li><a href="{% url 'loans:guarantors_report' %}" class="nav-link {% if request.resolver_match.url_name == 'guarantors_report' %}active{% endif %}">Guarantors</a></li>
+                            {% if user.profile.is_admin %}
+                            <li><a href="{% url 'loans:product_list' %}" class="nav-link {% if request.resolver_match.url_name == 'product_list' %}active{% endif %}">Loan Products</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'payments:list' %}" class="nav-link {% if request.resolver_match.app_name == 'payments' %}active{% endif %}">
+                        <i class="bi bi-receipt me-2"></i>Payments
+                    </a>
+                </li>
+
+                <!-- Meetings dropdown -->
+                <li class="nav-item">
+                    <div class="nav-dropdown-toggle {% if request.resolver_match.app_name == 'meetings' %}has-active{% endif %}"
+                         data-bs-toggle="collapse" data-bs-target="#dd-meetings"
+                         aria-expanded="{% if request.resolver_match.app_name == 'meetings' %}true{% else %}false{% endif %}">
+                        <i class="bi bi-calendar-event me-2"></i>Meetings
+                        <i class="bi bi-chevron-right dd-arrow"></i>
+                    </div>
+                    <div id="dd-meetings" class="collapse {% if request.resolver_match.app_name == 'meetings' %}show{% endif %}">
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'meetings:list' %}" class="nav-link {% if request.resolver_match.url_name == 'list' and request.resolver_match.app_name == 'meetings' %}active{% endif %}">All Meetings</a></li>
+                            <li><a href="{% url 'meetings:penalty_list' %}" class="nav-link {% if request.resolver_match.url_name == 'penalty_list' %}active{% endif %}">Penalties</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <div class="nav-dropdown-toggle {% if request.resolver_match.app_name == 'agm' %}has-active{% endif %}"
+                         data-bs-toggle="collapse" data-bs-target="#dd-agm"
+                         aria-expanded="{% if request.resolver_match.app_name == 'agm' %}true{% else %}false{% endif %}">
+                        <i class="bi bi-people-fill me-2"></i>AGM
+                        <i class="bi bi-chevron-right dd-arrow"></i>
+                    </div>
+                    <div id="dd-agm" class="collapse {% if request.resolver_match.app_name == 'agm' %}show{% endif %}">
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'agm:list' %}" class="nav-link {% if request.resolver_match.url_name == 'list' and request.resolver_match.app_name == 'agm' %}active{% endif %}">All AGMs</a></li>
+                            {% if user.profile.is_treasurer %}
+                            <li><a href="{% url 'agm:add' %}" class="nav-link {% if request.resolver_match.url_name == 'add' and request.resolver_match.app_name == 'agm' %}active{% endif %}">Schedule AGM</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- Accounting dropdown -->
+                <li class="nav-section">Accounting</li>                <li class="nav-item">
+                    <div class="nav-dropdown-toggle {% if request.resolver_match.app_name == 'accounting' %}has-active{% endif %}"
+                         data-bs-toggle="collapse" data-bs-target="#dd-accounting"
+                         aria-expanded="{% if request.resolver_match.app_name == 'accounting' %}true{% else %}false{% endif %}">
+                        <i class="bi bi-wallet2 me-2"></i>Accounting
+                        <i class="bi bi-chevron-right dd-arrow"></i>
+                    </div>
+                    <div id="dd-accounting" class="collapse {% if request.resolver_match.app_name == 'accounting' %}show{% endif %}">
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'accounting:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' and request.resolver_match.app_name == 'accounting' %}active{% endif %}">Fund Overview</a></li>
+                            <li><a href="{% url 'accounting:ledger' %}" class="nav-link {% if request.resolver_match.url_name == 'ledger' %}active{% endif %}">Ledger</a></li>
+                            <li><a href="{% url 'accounting:expenses' %}" class="nav-link {% if request.resolver_match.url_name == 'expenses' %}active{% endif %}">Expenses</a></li>
+                            <li><a href="{% url 'accounting:year_end_list' %}" class="nav-link {% if 'year_end' in request.resolver_match.url_name %}active{% endif %}">
+                                <i class="bi bi-calendar-check me-1"></i>Year-End Payout
+                            </a></li>
+                            <li><a href="{% url 'accounting:other_income_list' %}" class="nav-link {% if 'other_income' in request.resolver_match.url_name %}active{% endif %}">
+                                <i class="bi bi-bank me-1"></i>Other Income
+                            </a></li>
+                        </ul>
+                    </div>
+                </li>
+                <!-- Double-entry ledger -->
+                <li class="nav-item">
+                    <div class="nav-dropdown-toggle {% if request.resolver_match.app_name == 'ledger' %}has-active{% endif %}"
+                         data-bs-toggle="collapse" data-bs-target="#dd-ledger"
+                         aria-expanded="{% if request.resolver_match.app_name == 'ledger' %}true{% else %}false{% endif %}">
+                        <i class="bi bi-journal-bookmark me-2"></i>Financial Reports
+                        <i class="bi bi-chevron-right dd-arrow"></i>
+                    </div>
+                    <div id="dd-ledger" class="collapse {% if request.resolver_match.app_name == 'ledger' %}show{% endif %}">
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'ledger:cashbook' %}" class="nav-link {% if request.resolver_match.url_name == 'cashbook' %}active{% endif %}">Cashbook</a></li>
+                            <li><a href="{% url 'ledger:journal' %}" class="nav-link {% if request.resolver_match.url_name == 'journal' %}active{% endif %}">Journal Entries</a></li>
+                            <li><a href="{% url 'ledger:trial_balance' %}" class="nav-link {% if request.resolver_match.url_name == 'trial_balance' %}active{% endif %}">Trial Balance</a></li>
+                            <li><a href="{% url 'ledger:profit_loss' %}" class="nav-link {% if request.resolver_match.url_name == 'profit_loss' %}active{% endif %}">Profit & Loss</a></li>
+                            <li><a href="{% url 'ledger:balance_sheet' %}" class="nav-link {% if request.resolver_match.url_name == 'balance_sheet' %}active{% endif %}">Balance Sheet</a></li>
+                            <li><a href="{% url 'ledger:coa' %}" class="nav-link {% if request.resolver_match.url_name == 'coa' %}active{% endif %}">Chart of Accounts</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- Reports dropdown -->
+                <li class="nav-section">Reports</li>
+                <li class="nav-item">
+                    <div class="nav-dropdown-toggle {% if request.resolver_match.app_name == 'reports' %}has-active{% endif %}"
+                         data-bs-toggle="collapse" data-bs-target="#dd-reports"
+                         aria-expanded="{% if request.resolver_match.app_name == 'reports' %}true{% else %}false{% endif %}">
+                        <i class="bi bi-bar-chart me-2"></i>Reports
+                        <i class="bi bi-chevron-right dd-arrow"></i>
+                    </div>
+                    <div id="dd-reports" class="collapse {% if request.resolver_match.app_name == 'reports' %}show{% endif %}">
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'reports:income' %}" class="nav-link {% if request.resolver_match.url_name == 'income' %}active{% endif %}">Income Report</a></li>
+                            <li><a href="{% url 'reports:contributions' %}" class="nav-link {% if request.resolver_match.url_name == 'contributions' and request.resolver_match.app_name == 'reports' %}active{% endif %}">Contributions</a></li>
+                            <li><a href="{% url 'reports:loans' %}" class="nav-link {% if request.resolver_match.url_name == 'loans' and request.resolver_match.app_name == 'reports' %}active{% endif %}">Loan Report</a></li>
+                            <li><a href="{% url 'reports:member_statement' %}" class="nav-link {% if request.resolver_match.url_name == 'member_statement' %}active{% endif %}">Member Statement</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- Share Capital -->
+                <li class="nav-item">
+                    <div class="nav-dropdown-toggle {% if request.resolver_match.app_name == 'shares' %}has-active{% endif %}"
+                         data-bs-toggle="collapse" data-bs-target="#dd-shares"
+                         aria-expanded="{% if request.resolver_match.app_name == 'shares' %}true{% else %}false{% endif %}">
+                        <i class="bi bi-grid-3x3-gap me-2"></i>Share Capital
+                        <i class="bi bi-chevron-right dd-arrow"></i>
+                    </div>
+                    <div id="dd-shares" class="collapse {% if request.resolver_match.app_name == 'shares' %}show{% endif %}">
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'shares:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' and request.resolver_match.app_name == 'shares' %}active{% endif %}">Overview</a></li>
+                            {% if user.profile.is_admin %}
+                            <li><a href="{% url 'shares:config' %}" class="nav-link {% if request.resolver_match.url_name == 'config' %}active{% endif %}">Configure</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-section">Welfare</li>
+                <li class="nav-item">
+                    <div class="nav-dropdown-toggle {% if request.resolver_match.app_name == 'investments' %}has-active{% endif %}"
+                         data-bs-toggle="collapse" data-bs-target="#dd-investments"
+                         aria-expanded="{% if request.resolver_match.app_name == 'investments' %}true{% else %}false{% endif %}">
+                        <i class="bi bi-briefcase me-2"></i>Investments
+                        <i class="bi bi-chevron-right dd-arrow"></i>
+                    </div>
+                    <div id="dd-investments" class="collapse {% if request.resolver_match.app_name == 'investments' %}show{% endif %}">
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'investments:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' and request.resolver_match.app_name == 'investments' %}active{% endif %}">Portfolio</a></li>
+                            <li><a href="{% url 'investments:list' %}" class="nav-link {% if request.resolver_match.url_name == 'list' and request.resolver_match.app_name == 'investments' %}active{% endif %}">All Investments</a></li>
+                            {% if user.profile.is_treasurer %}
+                            <li><a href="{% url 'investments:add' %}" class="nav-link {% if request.resolver_match.url_name == 'add' and request.resolver_match.app_name == 'investments' %}active{% endif %}">Add Investment</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <div class="nav-dropdown-toggle {% if request.resolver_match.app_name == 'welfare' %}has-active{% endif %}"
+                         data-bs-toggle="collapse" data-bs-target="#dd-welfare"
+                         aria-expanded="{% if request.resolver_match.app_name == 'welfare' %}true{% else %}false{% endif %}">
+                        <i class="bi bi-heart-pulse me-2"></i>Welfare Fund
+                        <i class="bi bi-chevron-right dd-arrow"></i>
+                    </div>
+                    <div id="dd-welfare" class="collapse {% if request.resolver_match.app_name == 'welfare' %}show{% endif %}">
+                        <ul class="sidebar-submenu">
+                            <li><a href="{% url 'welfare:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' and request.resolver_match.app_name == 'welfare' %}active{% endif %}">Overview</a></li>
+                            <li><a href="{% url 'welfare:claim_list' %}" class="nav-link {% if 'claim' in request.resolver_match.url_name|default:'' and request.resolver_match.app_name == 'welfare' %}active{% endif %}">Claims</a></li>
+                            <li><a href="{% url 'welfare:contribution_list' %}" class="nav-link {% if 'contribution' in request.resolver_match.url_name|default:'' and request.resolver_match.app_name == 'welfare' %}active{% endif %}">Contributions</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-section">Communications</li>
+                <li class="nav-item">
+                    <a href="{% url 'board:board' %}" class="nav-link {% if request.resolver_match.app_name == 'board' %}active{% endif %}">
+                        <i class="bi bi-chat-square-dots me-2"></i>Message Board
+                        {% if board_unread_count %}<span class="badge bg-danger ms-auto">{{ board_unread_count }}</span>{% endif %}
+                    </a>
+                </li>
+                {% if user.profile.is_admin %}
+                <li class="nav-section">System</li>
+                <li class="nav-item">
+                    <a href="{% url 'accounts:users' %}" class="nav-link {% if request.resolver_match.app_name == 'accounts' and 'users' in request.path %}active{% endif %}">
+                        <i class="bi bi-people-fill me-2"></i>User Management
+                    </a>
+                </li>
+                {% if request.chama %}
+                <li class="nav-item">
+                    <a href="{% url 'tenants:subscription' %}" class="nav-link {% if 'subscription' in request.path %}active{% endif %}">
+                        <i class="bi bi-credit-card me-2"></i>Subscription
+                        {% if request.chama.trial_days_left and request.chama.trial_days_left <= 7 and request.chama.plan == 'free' %}
+                        <span class="badge bg-warning text-dark ms-1" style="font-size:.65rem;">{{ request.chama.trial_days_left }}d</span>
+                        {% endif %}
+                    </a>
+                </li>
+                {% endif %}
+                {% endif %}
+                {% if user.is_staff %}
+                <li class="nav-item">
+                    <a href="{% url 'tenants:dashboard' %}" class="nav-link {% if request.resolver_match.app_name == 'tenants' %}active{% endif %}">
+                        <i class="bi bi-building me-2"></i>Platform Admin
+                    </a>
+                </li>
+                {% endif %}
+
+            </ul>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="d-flex align-items-center gap-2">
+                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white"
+                     style="width:32px;height:32px;font-size:0.8rem;font-weight:700;flex-shrink:0;">
+                    {{ user.username|first|upper }}
+                </div>
+                <div>
+                    <div class="username">{{ user.username }}</div>
+                    <div class="role">{{ user.profile.get_role_display|default:"User" }}</div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content flex-grow-1">
+        <div class="topbar">
+            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle navigation" aria-controls="sidebar" aria-expanded="false">
+                <i class="bi bi-list"></i>
+            </button>
+            <span class="page-heading">{% block page_title %}{% endblock %}</span>
+            <div class="d-flex align-items-center gap-3">
+                <a href="{% url 'board:board' %}" class="position-relative text-muted" title="Message Board" style="text-decoration:none">
+                    <i class="bi bi-chat-square-dots fs-5"></i>
+                    {% if board_unread_count %}
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:.6rem;">
+                        {{ board_unread_count }}
+                    </span>
+                    {% endif %}
+                </a>
+                <span class="text-muted small d-none d-md-inline">
+                    <i class="bi bi-calendar3 me-1"></i>
+                    {% now "D, d M Y" %}
+                </span>
+                <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-box-arrow-right me-1"></i>Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="page-content">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if request.chama and request.chama.is_on_trial %}
+            {% with days=request.chama.trial_days_left %}
+            {% if days <= 7 %}
+            <div class="alert alert-warning d-flex align-items-center gap-2 py-2 mb-3" style="font-size:.85rem;">
+                <i class="bi bi-clock-history flex-shrink-0"></i>
+                <div>
+                    {% if days == 0 %}
+                    Your free trial expires <strong>today</strong>.
+                    {% else %}
+                    Your free trial expires in <strong>{{ days }} day{{ days|pluralize }}</strong>.
+                    {% endif %}
+                    <a href="{% url 'tenants:subscription' %}" class="alert-link ms-1">Subscribe now to keep access.</a>
+                </div>
+            </div>
+            {% endif %}
+            {% endwith %}
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% else %}
+{% block auth_content %}{% endblock %}
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function () {
+    'use strict';
+    var sidebar  = document.getElementById('sidebar');
+    var overlay  = document.getElementById('sidebarOverlay');
+    var toggle   = document.getElementById('sidebarToggle');
+    var closeBtn = document.getElementById('sidebarClose');
+
+    if (!sidebar) return;   // not authenticated / no sidebar on this page
+
+    function openSidebar() {
+        sidebar.classList.add('open');
+        overlay.classList.add('show');
+        if (toggle) toggle.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeSidebar() {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('show');
+        if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+    }
+
+    if (toggle)   toggle.addEventListener('click', function () {
+        sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+    });
+    if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+    if (overlay)  overlay.addEventListener('click', closeSidebar);
+
+    // Close sidebar on nav-link click (navigate away) on small screens
+    sidebar.querySelectorAll('a.nav-link').forEach(function (link) {
+        link.addEventListener('click', function () {
+            if (window.innerWidth < 992) closeSidebar();
+        });
+    });
+
+    // Close sidebar if window is resized to desktop
+    window.addEventListener('resize', function () {
+        if (window.innerWidth >= 992) closeSidebar();
+    });
+})();
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

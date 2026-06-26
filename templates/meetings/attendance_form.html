@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block title %}Attendance — {{ meeting.title }}{% endblock %}
+{% block page_title %}Mark Attendance — {{ meeting.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card mb-3">
+            <div class="card-body py-2">
+                <div class="row text-center g-2">
+                    <div class="col-4">
+                        <div class="text-muted small">Date</div>
+                        <div class="fw-semibold">{{ meeting.date }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-muted small">Venue</div>
+                        <div class="fw-semibold">{{ meeting.venue|default:"—" }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-muted small">Total Members</div>
+                        <div class="fw-semibold">{{ rows|length }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-person-check me-2"></i>Attendance Register</span>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-success" id="markAllPresent">
+                        <i class="bi bi-check-all me-1"></i>All Present
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="markAllAbsent">
+                        <i class="bi bi-x-circle me-1"></i>All Absent
+                    </button>
+                </div>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th style="width:40px;">#</th>
+                                <th>Member</th>
+                                <th style="width:120px;" class="text-center">Present</th>
+                                <th>Notes (if absent)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in rows %}
+                            <tr class="attendance-row {% if row.present %}table-success{% endif %}" id="row_{{ row.member.pk }}">
+                                <td class="text-muted">{{ forloop.counter }}</td>
+                                <td class="fw-semibold">{{ row.member.name }}</td>
+                                <td class="text-center">
+                                    <div class="form-check form-switch d-flex justify-content-center">
+                                        <input class="form-check-input attendance-check" type="checkbox"
+                                               name="present_{{ row.member.pk }}"
+                                               id="present_{{ row.member.pk }}"
+                                               {% if row.present %}checked{% endif %}
+                                               onchange="toggleRow({{ row.member.pk }}, this.checked)"
+                                               style="width:2.5em;height:1.3em;cursor:pointer;">
+                                    </div>
+                                </td>
+                                <td>
+                                    <input type="text" name="notes_{{ row.member.pk }}"
+                                           value="{{ row.notes }}"
+                                           class="form-control form-control-sm"
+                                           placeholder="e.g. Apologies sent">
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted py-4">No members found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+                    <span class="text-muted small">
+                        Present: <strong id="presentCount">{{ rows|length }}</strong> /
+                        <strong>{{ rows|length }}</strong>
+                    </span>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i>Save Attendance
+                        </button>
+                        <a href="{% url 'meetings:detail' meeting.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleRow(memberId, isPresent) {
+    const row = document.getElementById('row_' + memberId);
+    if (isPresent) {
+        row.classList.add('table-success');
+        row.classList.remove('table-danger');
+    } else {
+        row.classList.remove('table-success');
+    }
+    updateCount();
+}
+
+function updateCount() {
+    const checked = document.querySelectorAll('.attendance-check:checked').length;
+    document.getElementById('presentCount').textContent = checked;
+}
+
+document.getElementById('markAllPresent').addEventListener('click', () => {
+    document.querySelectorAll('.attendance-check').forEach(cb => {
+        cb.checked = true;
+        toggleRow(cb.id.replace('present_', ''), true);
+    });
+});
+
+document.getElementById('markAllAbsent').addEventListener('click', () => {
+    document.querySelectorAll('.attendance-check').forEach(cb => {
+        cb.checked = false;
+        toggleRow(cb.id.replace('present_', ''), false);
+    });
+});
+
+// Init count
+updateCount();
+</script>
+{% endblock %}

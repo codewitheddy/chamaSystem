@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% block title %}Exit — {{ member.name }}{% endblock %}
+{% block page_title %}Member Exit & Account Closure{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+    <!-- Left: Settlement Summary -->
+    <div class="col-lg-7">
+        <div class="card mb-3">
+            <div class="card-header d-flex align-items-center gap-2">
+                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                     style="width:36px;height:36px;background:#eff6ff;flex-shrink:0;">
+                    <i class="bi bi-person-fill" style="color:#2563eb;"></i>
+                </div>
+                <div>
+                    <div class="fw-semibold">{{ member.name }}</div>
+                    <div class="text-muted" style="font-size:0.78rem;">{{ member.phone }} &nbsp;·&nbsp; Joined {{ member.date_joined }}</div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th colspan="2" class="ps-3" style="background:#f8fafc;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.5px;">
+                                Account Settlement
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="ps-3 text-muted">Total Contributions</td>
+                            <td class="pe-3 text-end fw-semibold" style="color:#16a34a;">
+                                + KES {{ summary.contributions|floatformat:2 }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="ps-3 text-muted">
+                                Profit Share
+                                <span class="badge bg-light text-secondary border ms-1" style="font-size:0.7rem;">
+                                    {{ summary.member_share_pct }}% of pool
+                                </span>
+                            </td>
+                            <td class="pe-3 text-end fw-semibold" style="color:#7c3aed;">
+                                + KES {{ summary.member_profit|floatformat:2 }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="ps-3 text-muted">Active Loan Balance</td>
+                            <td class="pe-3 text-end fw-semibold {% if summary.loan_balance > 0 %}text-danger{% else %}text-muted{% endif %}">
+                                − KES {{ summary.loan_balance|floatformat:2 }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="ps-3 text-muted">Unpaid Penalties</td>
+                            <td class="pe-3 text-end fw-semibold {% if summary.penalties > 0 %}text-danger{% else %}text-muted{% endif %}">
+                                − KES {{ summary.penalties|floatformat:2 }}
+                            </td>
+                        </tr>
+                        <tr style="border-top:2px solid #e2e8f0;">
+                            <td class="ps-3 fw-bold">Net Position</td>
+                            <td class="pe-3 text-end fw-bold fs-5 {% if summary.net >= 0 %}" style="color:#16a34a;"{% else %}" style="color:#e11d48;"{% endif %}>
+                                KES {{ summary.net|floatformat:2 }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Income pool breakdown -->
+                {% if summary.income_pool > 0 %}
+                <div class="px-3 py-2" style="background:#f5f3ff;border-top:1px solid #e2e8f0;font-size:0.78rem;color:#475569;">
+                    <div class="fw-semibold mb-1" style="color:#7c3aed;"><i class="bi bi-pie-chart me-1"></i>Income Pool Breakdown</div>
+                    <div class="d-flex justify-content-between">
+                        <span>Gross income (interest + penalties + other)</span>
+                        <span>KES {{ summary.gross_income|floatformat:2 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Less: expenses</span>
+                        <span class="text-danger">− KES {{ summary.total_expenses|floatformat:2 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between fw-semibold border-top mt-1 pt-1">
+                        <span>Net income pool</span>
+                        <span style="color:#7c3aed;">KES {{ summary.income_pool|floatformat:2 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mt-1">
+                        <span>Member's share ({{ summary.member_share_pct }}%)</span>
+                        <span style="color:#7c3aed;">KES {{ summary.member_profit|floatformat:2 }}</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Net verdict -->
+        {% if summary.net >= 0 %}
+        <div class="alert d-flex align-items-center gap-2 mb-3"
+             style="background:#f0fdf4;border-color:#bbf7d0;color:#15803d;">
+            <i class="bi bi-arrow-up-circle-fill fs-5"></i>
+            <div>
+                <strong>Refund Due to Member:</strong> KES {{ summary.refund_due|floatformat:2 }}<br>
+                <span style="font-size:0.82rem;">The group owes this member their net contributions after deductions.</span>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert d-flex align-items-center gap-2 mb-3"
+             style="background:#fff1f2;border-color:#fecaca;color:#b91c1c;">
+            <i class="bi bi-arrow-down-circle-fill fs-5"></i>
+            <div>
+                <strong>Amount Owed to Group:</strong> KES {{ summary.amount_owed|floatformat:2 }}<br>
+                <span style="font-size:0.82rem;">Member must settle this balance before exit is finalised.</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Warnings -->
+        {% if summary.has_active_loans %}
+        <div class="alert py-2 mb-2" style="background:#fffbeb;border-color:#fde68a;color:#92400e;font-size:0.85rem;">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            <strong>Active loan(s) outstanding.</strong> Loan balance is included in the net calculation above.
+        </div>
+        {% endif %}
+
+        {% if summary.has_unpaid_penalties %}
+        <div class="alert py-2 mb-2" style="background:#fffbeb;border-color:#fde68a;color:#92400e;font-size:0.85rem;">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            <strong>Unpaid penalties.</strong> KES {{ summary.penalties|floatformat:2 }} included in deductions.
+        </div>
+        {% if unpaid_penalties %}
+        <div class="card mb-3">
+            <div class="card-header" style="font-size:0.82rem;"><i class="bi bi-exclamation-triangle me-1"></i>Unpaid Penalties (will be settled on exit)</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr><th>Meeting</th><th>Reason</th><th>Detail</th><th class="text-end">Amount</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for p in unpaid_penalties %}
+                        <tr>
+                            <td>{{ p.meeting.date }}</td>
+                            <td>{{ p.get_reason_display }}</td>
+                            <td class="text-muted small">{{ p.description|default:"—" }}</td>
+                            <td class="text-end text-danger fw-semibold">KES {{ p.amount|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr style="background:#fff1f2;">
+                            <td colspan="3" class="ps-3 fw-semibold text-danger">Total deducted</td>
+                            <td class="text-end fw-bold text-danger pe-3">KES {{ summary.penalties|floatformat:2 }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        {% if summary.has_active_guarantees %}
+        <div class="alert py-2 mb-3" style="background:#fff1f2;border-color:#fecaca;color:#b91c1c;font-size:0.85rem;">
+            <i class="bi bi-shield-exclamation me-1"></i>
+            <strong>Active guarantees — action required.</strong>
+            This member is guaranteeing the following loans. A replacement guarantor must be arranged.
+        </div>
+        <div class="card mb-3">
+            <div class="card-header" style="font-size:0.82rem;">Active Guarantees</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr><th>Borrower</th><th>Loan Amount</th><th>Guaranteed</th><th>Balance</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for g in summary.active_guarantees %}
+                        <tr>
+                            <td>{{ g.loan.member.name }}</td>
+                            <td>KES {{ g.loan.loan_amount|floatformat:2 }}</td>
+                            <td>KES {{ g.amount_guaranteed|floatformat:2 }}</td>
+                            <td class="text-danger fw-semibold">KES {{ g.loan.balance|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Right: Confirm Exit -->
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-door-open me-2"></i>Confirm Exit</div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    Closing this account will mark the member as <strong>Exited</strong>.
+                    Their financial history is preserved for records. This action cannot be undone
+                    without admin intervention.
+                </p>
+                <form method="post">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger py-2">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <!-- Settlement capture -->
+                    <div class="mb-3 p-3 rounded" style="background:#f8fafc;border:1px solid #e2e8f0;">
+                        <div class="fw-semibold small mb-2" style="color:#334155;">
+                            <i class="bi bi-cash-coin me-1"></i>Settlement Details
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small mb-1">{{ form.settlement_amount.label }}</label>
+                            {{ form.settlement_amount }}
+                            <div class="text-muted" style="font-size:0.75rem;margin-top:3px;">
+                                {{ form.settlement_amount.help_text }}
+                            </div>
+                            {% if form.settlement_amount.errors %}
+                            <div class="text-danger small mt-1">{{ form.settlement_amount.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small mb-1">{{ form.settlement_method.label }}</label>
+                            {{ form.settlement_method }}
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label small mb-1">{{ form.settlement_ref.label }}</label>
+                            {{ form.settlement_ref }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">{{ form.notes.label }}</label>
+                        {{ form.notes }}
+                    </div>
+                    <div class="mb-4 form-check">
+                        {{ form.confirm }}
+                        <label class="form-check-label small">{{ form.confirm.label }}</label>
+                        {% if form.confirm.errors %}
+                        <div class="text-danger small mt-1">{{ form.confirm.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-door-open me-1"></i>Close Account & Exit
+                        </button>
+                        <a href="{% url 'members:detail' member.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Quick summary box -->
+        <div class="card mt-3" style="background:#f8fafc;">
+            <div class="card-body" style="font-size:0.82rem;color:#475569;">
+                <div class="fw-semibold mb-2" style="color:#334155;">Summary</div>
+                <div class="d-flex justify-content-between mb-1">
+                    <span>Contributions</span>
+                    <span style="color:#16a34a;">KES {{ summary.contributions|floatformat:2 }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                    <span>Profit Share ({{ summary.member_share_pct }}%)</span>
+                    <span style="color:#7c3aed;">KES {{ summary.member_profit|floatformat:2 }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                    <span>Loan Balance</span>
+                    <span class="text-danger">− KES {{ summary.loan_balance|floatformat:2 }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Penalties</span>
+                    <span class="text-danger">− KES {{ summary.penalties|floatformat:2 }}</span>
+                </div>
+                <div class="d-flex justify-content-between fw-bold border-top pt-2">
+                    <span>Net</span>
+                    <span {% if summary.net >= 0 %}style="color:#16a34a;"{% else %}style="color:#e11d48;"{% endif %}>
+                        KES {{ summary.net|floatformat:2 }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

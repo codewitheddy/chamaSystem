@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Chart of Accounts{% endblock %}
+{% block page_title %}Chart of Accounts{% endblock %}
+
+{% block content %}
+{% for type_name, accts in by_type.items %}
+<div class="card mb-3">
+    <div class="card-header fw-semibold"><i class="bi bi-folder me-2"></i>{{ type_name }}</div>
+    <div class="table-responsive">
+        <table class="table table-sm mb-0">
+            <thead><tr><th>Code</th><th>Name</th><th>Normal Balance</th><th>Status</th></tr></thead>
+            <tbody>
+            {% for acct in accts %}
+            <tr>
+                <td class="text-muted fw-semibold">{{ acct.code }}</td>
+                <td>{{ acct.name }}</td>
+                <td><span class="badge {% if acct.normal_balance == 'debit' %}bg-success{% else %}bg-danger{% endif %}">{{ acct.normal_balance|capfirst }}</span></td>
+                <td>{% if acct.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% empty %}
+<div class="alert alert-warning">No chart of accounts found. This chama may need its accounts seeded.</div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "includes/print_base.html" %}
+{% block print_title %}Ledger{% endblock %}
+{% block print_heading %}General Ledger{% endblock %}
+{% block print_meta %}
+  Credits: KES {{ filtered_credits|floatformat:2 }} &nbsp;|&nbsp;
+  Debits: KES {{ filtered_debits|floatformat:2 }} &nbsp;|&nbsp;
+  Net: KES {{ filtered_net|floatformat:2 }} &nbsp;|&nbsp; {% now "d M Y" %}
+{% endblock %}
+{% block print_body %}
+<table>
+  <thead>
+    <tr><th>#</th><th>Date</th><th>Category</th><th>Description</th><th>Member</th><th>Credit</th><th>Debit</th></tr>
+  </thead>
+  <tbody>
+  {% for tx in transactions %}
+  <tr>
+    <td>{{ forloop.counter }}</td>
+    <td>{{ tx.date }}</td>
+    <td>{{ tx.get_category_display }}</td>
+    <td>{{ tx.description }}</td>
+    <td>{{ tx.member.name|default:"—" }}</td>
+    <td>{% if tx.direction == 'credit' %}KES {{ tx.amount|floatformat:2 }}{% endif %}</td>
+    <td>{% if tx.direction == 'debit' %}KES {{ tx.amount|floatformat:2 }}{% endif %}</td>
+  </tr>
+  {% empty %}<tr><td colspan="7">No transactions found.</td></tr>
+  {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr>
+      <td colspan="5">Totals</td>
+      <td>KES {{ filtered_credits|floatformat:2 }}</td>
+      <td>KES {{ filtered_debits|floatformat:2 }}</td>
+    </tr>
+  </tfoot>
+</table>
+{% endblock %}

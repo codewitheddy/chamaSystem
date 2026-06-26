@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% block title %}Meetings{% endblock %}
+{% block page_title %}Meetings{% endblock %}
+
+{% block content %}
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-4">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-blue"><i class="bi bi-calendar-event"></i></div>
+                <div>
+                    <div class="stat-label">Total Meetings</div>
+                    <div class="stat-value">{{ meetings.paginator.count|default:meetings|length }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-amber"><i class="bi bi-clock"></i></div>
+                <div>
+                    <div class="stat-label">Scheduled</div>
+                    <div class="stat-value">{{ scheduled_count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-green"><i class="bi bi-check-circle"></i></div>
+                <div>
+                    <div class="stat-label">Completed</div>
+                    <div class="stat-value">{{ completed_count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toolbar -->
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div class="d-flex gap-2">
+        <a href="{% url 'meetings:list' %}" class="btn btn-sm {% if not current_status %}btn-primary{% else %}btn-outline-secondary{% endif %}">All</a>
+        <a href="?status=scheduled" class="btn btn-sm {% if current_status == 'scheduled' %}btn-warning{% else %}btn-outline-secondary{% endif %}">Scheduled</a>
+        <a href="?status=completed" class="btn btn-sm {% if current_status == 'completed' %}btn-success{% else %}btn-outline-secondary{% endif %}">Completed</a>
+        <a href="?status=cancelled" class="btn btn-sm {% if current_status == 'cancelled' %}btn-danger{% else %}btn-outline-secondary{% endif %}">Cancelled</a>
+    </div>
+    <a href="{% url 'meetings:add' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-circle me-1"></i>Schedule Meeting
+    </a>
+</div>
+
+<!-- Table -->
+<div class="card">
+    <div class="card-header"><i class="bi bi-calendar-event me-2"></i>All Meetings</div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Venue</th>
+                    <th>Attendance</th>
+                    <th>Status</th>
+                    <th>Minutes</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in meetings %}
+                <tr>
+                    <td class="text-muted">{{ forloop.counter }}</td>
+                    <td>
+                        <a href="{% url 'meetings:detail' m.pk %}" class="fw-semibold text-decoration-none">
+                            {{ m.title }}
+                        </a>
+                    </td>
+                    <td>{{ m.date }}</td>
+                    <td>{{ m.time|default:"—" }}</td>
+                    <td>{{ m.venue|default:"—" }}</td>
+                    <td>
+                        {% if m.attendance_count > 0 %}
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-grow-1" style="height:6px;min-width:60px;">
+                                <div class="progress-bar bg-success" style="width:{{ m.attendance_percent }}%;"></div>
+                            </div>
+                            <span style="font-size:0.75rem;color:#64748b;white-space:nowrap;">
+                                {{ m.attendance_count }}/{{ m.total_members }}
+                            </span>
+                        </div>
+                        {% else %}
+                        <span class="text-muted small">Not taken</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if m.status == 'completed' %}
+                            <span class="badge" style="background:#f0fdf4;color:#16a34a;">Completed</span>
+                        {% elif m.status == 'cancelled' %}
+                            <span class="badge" style="background:#fff1f2;color:#e11d48;">Cancelled</span>
+                        {% else %}
+                            <span class="badge" style="background:#fffbeb;color:#d97706;">Scheduled</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if m.minutes %}
+                            <i class="bi bi-file-text text-success" title="Minutes recorded"></i>
+                        {% else %}
+                            <span class="text-muted small">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="{% url 'meetings:detail' m.pk %}" class="btn btn-sm btn-outline-secondary" title="View">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'meetings:attendance' m.pk %}" class="btn btn-sm btn-outline-primary" title="Attendance">
+                                <i class="bi bi-person-check"></i>
+                            </a>
+                            <a href="{% url 'meetings:edit' m.pk %}" class="btn btn-sm btn-outline-warning" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center text-muted py-5">
+                        <i class="bi bi-calendar-x" style="font-size:2rem;display:block;margin-bottom:0.5rem;"></i>
+                        No meetings scheduled yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-white border-top">
+        {% include 'includes/pagination.html' %}
+    </div>
+</div>
+
+{% endblock %}

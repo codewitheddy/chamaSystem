@@ -1,0 +1,558 @@
+{% load tz %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChamaSystem &mdash; Kenya's Table Banking Platform</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',system-ui,sans-serif;color:#1a1a2e;background:#fff;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+:root{--navy:#0d1b2a;--navy2:#1b2d42;--green:#0a7c3e;--green2:#0d9e50;--light:#f4f7fb;--border:#e2e8f0;--muted:#64748b;}
+
+/* ── NAVBAR ── */
+.topnav{background:rgba(13,27,42,.97);backdrop-filter:blur(16px);position:fixed;top:0;left:0;right:0;z-index:1000;padding:.8rem 0;border-bottom:1px solid rgba(255,255,255,.06);}
+.topnav-inner{max-width:1280px;margin:0 auto;padding:0 2.5rem;display:flex;align-items:center;position:relative;}
+.topnav-brand{font-weight:900;font-size:1.2rem;letter-spacing:-.03em;color:#fff;text-decoration:none;flex-shrink:0;}
+.topnav-brand span{color:#0d9e50;}
+.topnav-links{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:2.5rem;}
+.topnav-links a{color:rgba(255,255,255,.6);font-size:.9rem;font-weight:500;text-decoration:none;}
+.topnav-links a:hover{color:#fff;}
+.topnav-btns{margin-left:auto;display:flex;align-items:center;gap:.6rem;}
+.btn-nav-ghost{color:#fff;font-size:.85rem;font-weight:600;text-decoration:none;padding:.45rem 1rem;border:1px solid rgba(255,255,255,.25);border-radius:7px;}
+.btn-nav-ghost:hover{border-color:rgba(255,255,255,.6);color:#fff;}
+.btn-nav-solid{background:#0d9e50;color:#fff;font-size:.85rem;font-weight:700;text-decoration:none;padding:.45rem 1.1rem;border-radius:7px;}
+.btn-nav-solid:hover{background:#0a7c3e;color:#fff;}
+
+/* ── HERO ── */
+.hero{background:linear-gradient(150deg,#0d1b2a 0%,#1b2d42 55%,#0a2a1a 100%);height:100vh;min-height:680px;display:flex;align-items:stretch;position:relative;overflow:hidden;}
+.hero-grid{max-width:1280px;width:100%;margin:0 auto;padding:0 2.5rem;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;position:relative;z-index:1;}
+.hero-left{display:flex;flex-direction:column;justify-content:center;padding:6rem 0;}
+.hero-right{display:flex;align-items:center;padding:5rem 0;}
+.hero-badge{display:inline-flex;align-items:center;gap:.45rem;background:rgba(13,158,80,.15);border:1px solid rgba(13,158,80,.3);color:#4ade80;font-size:.75rem;font-weight:700;padding:.45rem 1rem;border-radius:99px;margin-bottom:1.75rem;letter-spacing:.5px;text-transform:uppercase;width:fit-content;}
+.hero-h1{font-size:clamp(3rem,5vw,5.2rem);font-weight:900;color:#fff;line-height:1.03;letter-spacing:-.04em;margin-bottom:1.5rem;}
+.hero-h1 em{font-style:normal;color:#4ade80;}
+.hero-sub{color:rgba(255,255,255,.62);font-size:1.1rem;line-height:1.85;max-width:480px;margin-bottom:2.5rem;}
+.hero-btns{display:flex;gap:.85rem;flex-wrap:wrap;align-items:center;margin-bottom:2.5rem;}
+.btn-primary-lg{background:#0d9e50;color:#fff;font-weight:700;font-size:1rem;padding:1rem 2.2rem;border-radius:10px;text-decoration:none;display:inline-flex;align-items:center;gap:.5rem;box-shadow:0 4px 20px rgba(13,158,80,.4);transition:all .2s;}
+.btn-primary-lg:hover{background:#0a7c3e;color:#fff;transform:translateY(-2px);}
+.btn-ghost-lg{background:transparent;color:#fff;font-weight:600;font-size:1rem;padding:1rem 2.2rem;border-radius:10px;text-decoration:none;display:inline-flex;align-items:center;gap:.5rem;border:2px solid rgba(255,255,255,.22);transition:all .2s;}
+.btn-ghost-lg:hover{border-color:rgba(255,255,255,.55);color:#fff;}
+.hero-trust{display:flex;align-items:center;gap:.65rem;color:rgba(255,255,255,.38);font-size:.85rem;}
+.hero-trust strong{color:rgba(255,255,255,.65);}
+
+/* ── DASHBOARD PREVIEW ── */
+.dash-preview{background:#1a2b3c;border:1px solid rgba(255,255,255,.1);border-radius:14px;overflow:hidden;box-shadow:0 40px 90px rgba(0,0,0,.55);width:100%;}
+.dash-bar{background:rgba(255,255,255,.05);padding:.7rem 1.1rem;display:flex;align-items:center;gap:.45rem;border-bottom:1px solid rgba(255,255,255,.07);}
+.dot{width:10px;height:10px;border-radius:50%;}
+.dash-url{flex:1;background:rgba(255,255,255,.07);border-radius:4px;padding:.25rem .85rem;font-size:.7rem;color:rgba(255,255,255,.3);margin:0 .7rem;}
+.dash-stats{padding:1.25rem;display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem;}
+.dstat{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:.8rem .9rem;}
+.dstat-l{font-size:.6rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;}
+.dstat-v{font-size:1.05rem;font-weight:800;color:#fff;margin-top:.2rem;}
+.dstat-v.g{color:#4ade80;}.dstat-v.r{color:#f87171;}.dstat-v.a{color:#fbbf24;}
+.dash-cards{padding:0 1.25rem 1.25rem;display:grid;grid-template-columns:1fr 1fr;gap:.7rem;}
+.dcard{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:9px;padding:.9rem;}
+.dcard-title{font-size:.65rem;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.7rem;}
+.drow{display:flex;align-items:center;gap:.6rem;padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.drow:last-child{border-bottom:none;}
+.ddot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.drow-t{font-size:.75rem;color:rgba(255,255,255,.52);flex:1;}
+.drow-v{font-size:.75rem;font-weight:700;}
+.dbar-bg{background:rgba(255,255,255,.08);border-radius:99px;height:5px;margin-top:.45rem;}
+.dbar-fill{height:5px;border-radius:99px;}
+
+/* ── TRUST STRIP ── */
+.trust-strip{background:var(--light);padding:2rem 0;border-bottom:1px solid var(--border);}
+.trust-inner{max-width:1280px;margin:0 auto;padding:0 2.5rem;}
+.trust-label{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:1.25rem;}
+.trust-pills{display:flex;align-items:center;justify-content:center;gap:2rem;flex-wrap:wrap;}
+.pill{background:#fff;border:1px solid var(--border);border-radius:7px;padding:.5rem 1.25rem;font-size:.82rem;font-weight:600;color:var(--muted);}
+
+/* ── SECTIONS ── */
+.section{padding:5.5rem 0;}
+.section-inner{max-width:1280px;margin:0 auto;padding:0 2.5rem;}
+.eyebrow{font-size:.7rem;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:.75rem;}
+.section-h2{font-size:clamp(1.9rem,3.2vw,2.7rem);font-weight:900;color:var(--navy);letter-spacing:-.03em;line-height:1.15;margin-bottom:1.1rem;}
+.section-p{color:var(--muted);font-size:1rem;line-height:1.8;max-width:500px;}
+.feat-row{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center;}
+.feat-row.flip{direction:rtl;}.feat-row.flip>*{direction:ltr;}
+.feat-list{list-style:none;margin-top:1.5rem;}
+.feat-list li{display:flex;align-items:flex-start;gap:.8rem;padding:.7rem 0;border-bottom:1px solid var(--border);}
+.feat-list li:last-child{border-bottom:none;}
+.fi{width:34px;height:34px;border-radius:8px;background:#e8f5ee;color:var(--green);display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0;margin-top:.1rem;}
+.ft{font-size:.93rem;font-weight:600;color:var(--navy);}
+.fd{font-size:.83rem;color:var(--muted);line-height:1.6;margin-top:.15rem;}
+
+/* ── VIS CARDS ── */
+.vis-card{background:var(--navy);border-radius:14px;padding:1.6rem;box-shadow:0 16px 50px rgba(13,27,42,.22);}
+.vis-title{font-size:.72rem;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.5px;margin-bottom:1rem;}
+.vis-stats{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:.9rem;}
+.vs{background:rgba(255,255,255,.06);border-radius:9px;padding:.8rem .9rem;}
+.vs-l{font-size:.6rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;}
+.vs-v{font-size:1.1rem;font-weight:800;color:#fff;margin-top:.2rem;}
+.vs-v.g{color:#4ade80;}.vs-v.r{color:#f87171;}.vs-v.a{color:#fbbf24;}
+.vis-row{display:flex;align-items:center;gap:.7rem;padding:.45rem 0;border-bottom:1px solid rgba(255,255,255,.06);}
+.vis-row:last-child{border-bottom:none;}
+.vdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.vt{font-size:.8rem;color:rgba(255,255,255,.52);flex:1;}
+.vv{font-size:.8rem;font-weight:700;}
+.vbar-bg{background:rgba(255,255,255,.08);border-radius:99px;height:5px;margin-top:.4rem;}
+.vbar-fill{height:5px;border-radius:99px;}
+
+/* ── STATS ── */
+.stats-section{background:var(--navy);padding:4.5rem 0;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2rem;text-align:center;}
+.stat-n{font-size:2.8rem;font-weight:900;color:#4ade80;letter-spacing:-.04em;line-height:1;}
+.stat-l{font-size:.88rem;color:rgba(255,255,255,.5);margin-top:.4rem;}
+
+/* ── FEATURES GRID ── */
+.features-section{background:var(--light);padding:5.5rem 0;}
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-top:3rem;}
+.feat-card{background:#fff;border:1px solid var(--border);border-radius:13px;padding:1.75rem;transition:box-shadow .2s,transform .2s;}
+.feat-card:hover{box-shadow:0 8px 28px rgba(10,124,62,.1);transform:translateY(-3px);}
+.feat-icon{width:46px;height:46px;border-radius:11px;background:#e8f5ee;color:var(--green);display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:1rem;}
+.feat-h{font-size:.97rem;font-weight:700;color:var(--navy);margin-bottom:.45rem;}
+.feat-p{font-size:.86rem;color:var(--muted);line-height:1.75;}
+
+/* ── HOW IT WORKS ── */
+.step-num{width:52px;height:52px;border-radius:50%;background:var(--navy);color:#4ade80;font-weight:900;font-size:1.1rem;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;border:2px solid rgba(13,158,80,.3);}
+
+/* ── PRICING ── */
+.pricing-section{padding:5.5rem 0;background:#fff;}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-top:3rem;}
+.price-card{border:1px solid var(--border);border-radius:15px;padding:2rem;position:relative;background:#fff;}
+.price-card.featured{border-color:var(--green);background:var(--navy);box-shadow:0 10px 36px rgba(13,27,42,.18);}
+.price-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--green2);color:#fff;font-size:.68rem;font-weight:700;padding:.28rem .85rem;border-radius:99px;white-space:nowrap;text-transform:uppercase;letter-spacing:.5px;}
+.price-name{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.7rem;}
+.price-name.lt{color:rgba(255,255,255,.5);}.price-name.dk{color:var(--muted);}
+.price-amt{font-size:2.6rem;font-weight:900;letter-spacing:-.04em;line-height:1;}
+.price-amt.lt{color:#fff;}.price-amt.dk{color:var(--navy);}
+.price-per{font-size:.86rem;margin-top:.25rem;margin-bottom:1.6rem;}
+.price-per.lt{color:rgba(255,255,255,.45);}.price-per.dk{color:var(--muted);}
+.price-feats{list-style:none;margin-bottom:1.75rem;}
+.price-feats li{display:flex;align-items:center;gap:.6rem;font-size:.88rem;padding:.45rem 0;border-bottom:1px solid rgba(255,255,255,.07);}
+.price-feats.dk li{border-bottom-color:var(--border);color:var(--navy);}
+.price-feats.lt li{color:rgba(255,255,255,.8);}
+.price-feats li:last-child{border-bottom:none;}
+.price-feats li i{font-size:.9rem;flex-shrink:0;}
+.price-feats.dk li i{color:var(--green);}.price-feats.lt li i{color:#4ade80;}
+.btn-price{display:block;text-align:center;padding:.85rem;border-radius:9px;font-weight:700;font-size:.9rem;text-decoration:none;transition:all .2s;}
+.btn-price-dk{background:var(--navy);color:#fff;}.btn-price-dk:hover{background:var(--navy2);color:#fff;}
+.btn-price-gr{background:var(--green2);color:#fff;box-shadow:0 4px 14px rgba(13,158,80,.3);}.btn-price-gr:hover{background:#0a7c3e;color:#fff;}
+.btn-price-ol{border:1.5px solid var(--border);color:var(--navy);}.btn-price-ol:hover{border-color:var(--navy);color:var(--navy);}
+
+/* ── CTA ── */
+.cta-section{background:linear-gradient(135deg,var(--navy) 0%,#0a2a1a 100%);padding:5.5rem 0;text-align:center;}
+.cta-h2{font-size:clamp(1.9rem,3.5vw,2.8rem);font-weight:900;color:#fff;letter-spacing:-.03em;margin-bottom:.9rem;line-height:1.1;}
+.cta-p{color:rgba(255,255,255,.58);font-size:1rem;margin-bottom:2.25rem;line-height:1.75;}
+
+/* ── FOOTER ── */
+.footer{background:#060d14;padding:3.5rem 0 1.75rem;border-top:1px solid rgba(255,255,255,.06);}
+.footer-inner{max-width:1280px;margin:0 auto;padding:0 2.5rem;}
+.footer-top{display:grid;grid-template-columns:2.5fr 1fr 1fr 1fr;gap:2.5rem;margin-bottom:2.5rem;}
+.footer-brand{font-weight:900;font-size:1.15rem;color:#fff;text-decoration:none;letter-spacing:-.03em;}
+.footer-brand span{color:#4ade80;}
+.footer-tag{color:rgba(255,255,255,.38);font-size:.86rem;line-height:1.7;margin-top:.65rem;max-width:240px;}
+.footer-col h6{color:rgba(255,255,255,.55);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:1rem;}
+.footer-col a{display:block;color:rgba(255,255,255,.38);font-size:.88rem;text-decoration:none;margin-bottom:.5rem;}
+.footer-col a:hover{color:#fff;}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.06);padding-top:1.4rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;}
+.footer-bottom p{color:rgba(255,255,255,.28);font-size:.83rem;}
+
+/* Mobile hamburger */
+.nav-hamburger{display:none;background:none;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:.35rem .55rem;color:#fff;font-size:1.2rem;cursor:pointer;line-height:1;margin-left:.75rem;}
+/* Mobile nav drawer */
+.mobile-nav{display:none;position:fixed;inset:0;background:rgba(13,27,42,.98);z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:1.75rem;}
+.mobile-nav.open{display:flex;}
+.mobile-nav a{color:rgba(255,255,255,.8);font-size:1.3rem;font-weight:600;text-decoration:none;}
+.mobile-nav a:hover{color:#fff;}
+.mobile-nav-close{position:absolute;top:1.25rem;right:1.5rem;background:none;border:none;color:rgba(255,255,255,.6);font-size:1.6rem;cursor:pointer;}
+/* How-it-works responsive grid */
+.steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2.5rem;}
+
+/* ── RESPONSIVE — must be LAST so they override base styles ── */
+@media(max-width:1024px){
+  .hero-grid,.feat-row{grid-template-columns:1fr;}
+  .hero{height:auto;overflow:visible;}
+  .hero-left{padding:6rem 0 2rem;}
+  .hero-right{padding:2rem 0 3rem;}
+  .feat-grid,.pricing-grid,.stats-grid{grid-template-columns:repeat(2,1fr);}
+  .footer-top{grid-template-columns:1fr 1fr;}
+  .feat-row.flip{direction:ltr;}
+  .topnav-links{display:none;}
+  .nav-hamburger{display:block;}
+}
+@media(max-width:640px){
+  .feat-grid,.pricing-grid,.stats-grid,.steps-grid{grid-template-columns:1fr;}
+  .footer-top{grid-template-columns:1fr;}
+  .topnav-inner{padding:0 1.25rem;}
+  .topnav-btns .btn-nav-ghost{display:none;}
+  .section-inner{padding:0 1.25rem;}
+  .trust-inner,.footer-inner{padding:0 1.25rem;}
+  .hero-grid{padding:0 1.25rem;}
+  .hero-left{padding:5rem 0 1.5rem;}
+  .hero-right{padding:0 0 3rem;}
+  .hero-h1{font-size:clamp(2.2rem,9vw,3.5rem);}
+  .hero-sub{font-size:.95rem;}
+  .hero-btns{flex-direction:column;align-items:flex-start;}
+  .btn-primary-lg,.btn-ghost-lg{font-size:.9rem;padding:.8rem 1.5rem;width:100%;justify-content:center;}
+  .dash-stats{grid-template-columns:repeat(2,1fr);}
+  .dash-preview{border-radius:10px;}
+  .trust-pills{gap:0.65rem;}
+  .section{padding:3.5rem 0;}
+  .stats-section{padding:3rem 0;}
+  .features-section{padding:3.5rem 0;}
+  .pricing-section{padding:3.5rem 0;}
+  .cta-section{padding:3.5rem 0;}
+}
+</style>
+</head>
+<body>
+
+<!-- Mobile nav drawer -->
+<div class="mobile-nav" id="mobileNav">
+  <button class="mobile-nav-close" id="mobileNavClose" aria-label="Close menu"><i class="bi bi-x-lg"></i></button>
+  <a href="#features" onclick="closeMobileNav()">Features</a>
+  <a href="#how" onclick="closeMobileNav()">How it works</a>
+  <a href="#pricing" onclick="closeMobileNav()">Pricing</a>
+  <a href="/accounts/login/" class="btn-nav-ghost" style="font-size:1rem;padding:.7rem 1.75rem;">Sign in</a>
+  <a href="{% url 'tenants:signup' %}" class="btn-nav-solid" style="font-size:1rem;padding:.7rem 1.75rem;">Get started free</a>
+</div>
+
+<!-- NAVBAR -->
+<nav class="topnav">
+  <div class="topnav-inner">
+    <a href="/" class="topnav-brand">Chama<span>System</span></a>
+    <div class="topnav-links">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+    </div>
+    <div class="topnav-btns">
+      <a href="/accounts/login/" class="btn-nav-ghost">Sign in</a>
+      <a href="{% url 'tenants:signup' %}" class="btn-nav-solid">Get started free</a>
+      <button class="nav-hamburger" id="navHamburger" aria-label="Open menu"><i class="bi bi-list"></i></button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid">
+    <div class="hero-left">
+      <div class="hero-badge"><i class="bi bi-flag-fill"></i>Built for Kenyan Chamas</div>
+      <h1 class="hero-h1">Your chama,<br>managed with<br><em>confidence.</em></h1>
+      <p class="hero-sub">The complete platform for Kenyan table banking groups. Track contributions, manage loans, run meetings, and grow your investments &mdash; all in one place.</p>
+      <div class="hero-btns">
+        <a href="{% url 'tenants:signup' %}" class="btn-primary-lg"><i class="bi bi-arrow-right-circle-fill"></i>Start for free</a>
+        <a href="/accounts/login/" class="btn-ghost-lg"><i class="bi bi-box-arrow-in-right"></i>Sign in</a>
+      </div>
+      {% if chama_count %}
+      <div class="hero-trust">
+        <i class="bi bi-people-fill" style="color:#4ade80;"></i>
+        <span>Trusted by <strong>{{ chama_count }}</strong> chamas across Kenya</span>
+      </div>
+      {% endif %}
+    </div>
+    <div class="hero-right">
+      <div class="dash-preview">
+        <div class="dash-bar">
+          <div class="dot" style="background:#ff5f57;"></div>
+          <div class="dot" style="background:#febc2e;"></div>
+          <div class="dot" style="background:#28c840;"></div>
+          <div class="dash-url">app.chamasystem.co.ke/dashboard</div>
+        </div>
+        <div class="dash-stats">
+          <div class="dstat"><div class="dstat-l">Members</div><div class="dstat-v">24</div></div>
+          <div class="dstat"><div class="dstat-l">Contributions</div><div class="dstat-v g">KES 480K</div></div>
+          <div class="dstat"><div class="dstat-l">Loan Balance</div><div class="dstat-v r">KES 120K</div></div>
+          <div class="dstat"><div class="dstat-l">Fund Balance</div><div class="dstat-v a">KES 360K</div></div>
+        </div>
+        <div class="dash-cards">
+          <div class="dcard">
+            <div class="dcard-title">Recent Activity</div>
+            <div class="drow"><div class="ddot" style="background:#4ade80;"></div><span class="drow-t">Jane Wanjiku &mdash; Contribution</span><span class="drow-v" style="color:#4ade80;">+KES 2,000</span></div>
+            <div class="drow"><div class="ddot" style="background:#fbbf24;"></div><span class="drow-t">Peter Kamau &mdash; Loan</span><span class="drow-v" style="color:#fbbf24;">KES 30,000</span></div>
+            <div class="drow"><div class="ddot" style="background:#f87171;"></div><span class="drow-t">Monthly Meeting &mdash; 15 Apr</span><span class="drow-v" style="color:#f87171;">Upcoming</span></div>
+          </div>
+          <div class="dcard">
+            <div class="dcard-title">Annual Target</div>
+            <div style="font-size:1.65rem;font-weight:900;color:#4ade80;margin-bottom:.35rem;">68%</div>
+            <div class="dbar-bg"><div class="dbar-fill" style="width:68%;background:#4ade80;"></div></div>
+            <div style="font-size:.68rem;color:rgba(255,255,255,.32);margin-top:.4rem;">KES 480K of KES 700K</div>
+            <div style="margin-top:.75rem;font-size:.68rem;color:rgba(255,255,255,.32);">Active loans: 3 &nbsp;&middot;&nbsp; Overdue: 1</div>
+            <div class="dbar-bg" style="margin-top:.3rem;"><div class="dbar-fill" style="width:35%;background:#f87171;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST STRIP -->
+<section class="trust-strip">
+  <div class="trust-inner">
+    <div class="trust-label">Trusted by chamas across Kenya</div>
+    <div class="trust-pills">
+      <div class="pill">&#127974; Table Banking</div>
+      <div class="pill">&#128241; M-Pesa Ready</div>
+      <div class="pill">&#128274; Secure &amp; Private</div>
+      <div class="pill">&#128202; Full Accounting</div>
+      <div class="pill">&#127472;&#127466; Made in Kenya</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURE: Contributions -->
+<section class="section" style="background:#fff;">
+  <div class="section-inner">
+    <div class="feat-row">
+      <div>
+        <div class="eyebrow">Contributions</div>
+        <h2 class="section-h2">Track every shilling,<br>every month.</h2>
+        <p class="section-p">Record monthly contributions, run bulk entry for all members at once, and automatically identify defaulters. No more spreadsheets.</p>
+        <ul class="feat-list">
+          <li><div class="fi"><i class="bi bi-cash-stack"></i></div><div><div class="ft">Bulk contribution entry</div><div class="fd">Record contributions for all active members in one form submission.</div></div></li>
+          <li><div class="fi"><i class="bi bi-person-x"></i></div><div><div class="ft">Defaulter tracking</div><div class="fd">Automatically flag members who have not contributed for any given month.</div></div></li>
+          <li><div class="fi"><i class="bi bi-file-earmark-pdf"></i></div><div><div class="ft">Export &amp; print</div><div class="fd">Download contribution reports as CSV or print for your records.</div></div></li>
+        </ul>
+      </div>
+      <div>
+        <div class="vis-card">
+          <div class="vis-title">Contributions &mdash; March 2026</div>
+          <div class="vis-stats">
+            <div class="vs"><div class="vs-l">Total Collected</div><div class="vs-v g">KES 48,000</div></div>
+            <div class="vs"><div class="vs-l">Members Paid</div><div class="vs-v">18 / 24</div></div>
+          </div>
+          <div class="vis-row"><div class="vdot" style="background:#4ade80;"></div><span class="vt">Jane Wanjiku</span><span class="vv" style="color:#4ade80;">KES 2,000 &#10003;</span></div>
+          <div class="vis-row"><div class="vdot" style="background:#4ade80;"></div><span class="vt">Peter Kamau</span><span class="vv" style="color:#4ade80;">KES 2,000 &#10003;</span></div>
+          <div class="vis-row"><div class="vdot" style="background:#f87171;"></div><span class="vt">Mary Achieng</span><span class="vv" style="color:#f87171;">Pending</span></div>
+          <div class="vis-row"><div class="vdot" style="background:#4ade80;"></div><span class="vt">David Were</span><span class="vv" style="color:#4ade80;">KES 2,000 &#10003;</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURE: Loans -->
+<section class="section" style="background:var(--light);">
+  <div class="section-inner">
+    <div class="feat-row flip">
+      <div>
+        <div class="eyebrow">Loan Management</div>
+        <h2 class="section-h2">Issue loans with full<br>repayment tracking.</h2>
+        <p class="section-p">Create loan products with custom interest rates, issue loans to members, track repayments, and get automatic overdue alerts.</p>
+        <ul class="feat-list">
+          <li><div class="fi"><i class="bi bi-credit-card"></i></div><div><div class="ft">Flexible loan products</div><div class="fd">Configure reducing balance or flat interest, set limits based on contributions or shares.</div></div></li>
+          <li><div class="fi"><i class="bi bi-shield-check"></i></div><div><div class="ft">Guarantors &amp; collateral</div><div class="fd">Attach guarantors and collateral documents to every loan.</div></div></li>
+          <li><div class="fi"><i class="bi bi-bell"></i></div><div><div class="ft">Overdue reminders</div><div class="fd">Automatic SMS and WhatsApp reminders for late repayments.</div></div></li>
+        </ul>
+      </div>
+      <div>
+        <div class="vis-card">
+          <div class="vis-title">Active Loans</div>
+          <div class="vis-stats">
+            <div class="vs"><div class="vs-l">Total Issued</div><div class="vs-v a">KES 180K</div></div>
+            <div class="vs"><div class="vs-l">Outstanding</div><div class="vs-v r">KES 120K</div></div>
+          </div>
+          <div class="vis-row"><div class="vdot" style="background:#fbbf24;"></div><span class="vt">Mary Achieng &mdash; KES 30K</span><span class="vv" style="color:#fbbf24;">Active</span></div>
+          <div class="vis-row"><div class="vdot" style="background:#4ade80;"></div><span class="vt">John Mwangi &mdash; KES 50K</span><span class="vv" style="color:#4ade80;">On track</span></div>
+          <div class="vis-row"><div class="vdot" style="background:#f87171;"></div><span class="vt">Grace Njeri &mdash; KES 20K</span><span class="vv" style="color:#f87171;">Overdue</span></div>
+          <div style="margin-top:.8rem;">
+            <div style="display:flex;justify-content:space-between;font-size:.7rem;color:rgba(255,255,255,.38);margin-bottom:.28rem;"><span>Repayment rate</span><span style="color:#4ade80;">67%</span></div>
+            <div class="vbar-bg"><div class="vbar-fill" style="width:67%;background:#4ade80;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats-section">
+  <div class="section-inner">
+    <div class="stats-grid">
+      <div><div class="stat-n">{{ chama_count|default:"0" }}+</div><div class="stat-l">Chamas registered</div></div>
+      <div><div class="stat-n">9</div><div class="stat-l">Powerful modules</div></div>
+      <div><div class="stat-n">3</div><div class="stat-l">Notification channels</div></div>
+      <div><div class="stat-n">100%</div><div class="stat-l">Web-based, no install</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ALL FEATURES -->
+<section class="features-section" id="features">
+  <div class="section-inner">
+    <div style="text-align:center;margin-bottom:.5rem;">
+      <div class="eyebrow">Everything included</div>
+      <h2 class="section-h2">Built for how Kenyan chamas work.</h2>
+      <p class="section-p" style="margin:0 auto;text-align:center;">One platform replaces your spreadsheets, WhatsApp reminders, and manual ledgers.</p>
+    </div>
+    <div class="feat-grid">
+      {% for icon, title, desc in features %}
+      <div class="feat-card">
+        <div class="feat-icon"><i class="bi bi-{{ icon }}"></i></div>
+        <div class="feat-h">{{ title }}</div>
+        <div class="feat-p">{{ desc }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" style="background:#fff;" id="how">
+  <div class="section-inner">
+    <div style="text-align:center;margin-bottom:3rem;">
+      <div class="eyebrow">Simple setup</div>
+      <h2 class="section-h2">Up and running in 3 steps</h2>
+      <p class="section-p" style="margin:0 auto;text-align:center;">No technical knowledge needed. No IT team. Just your chama.</p>
+    </div>
+    <div class="steps-grid">
+      {% for num, title, desc in steps %}
+      <div style="text-align:center;padding:0 .75rem;">
+        <div class="step-num">{{ num }}</div>
+        <div style="font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:.5rem;">{{ title }}</div>
+        <div style="font-size:.88rem;color:var(--muted);line-height:1.8;">{{ desc }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-section" id="pricing">
+  <div class="section-inner">
+    <div style="text-align:center;margin-bottom:.5rem;">
+      <div class="eyebrow">Simple pricing</div>
+      <h2 class="section-h2">Start free, grow with your chama</h2>
+      <p class="section-p" style="margin:0 auto;text-align:center;">30-day free trial on all plans. No credit card required.</p>
+    </div>
+    <div class="pricing-grid">
+
+      <!-- Basic -->
+      <div class="price-card">
+        <div class="price-name dk">Basic</div>
+        <div class="price-amt dk">KES 500</div>
+        <div class="price-per dk">per month</div>
+        <ul class="price-feats dk">
+          <li><i class="bi bi-check-lg"></i>Members &amp; contributions</li>
+          <li><i class="bi bi-check-lg"></i>Loan management</li>
+          <li><i class="bi bi-check-lg"></i>Meeting management</li>
+          <li><i class="bi bi-check-lg"></i>Basic reports</li>
+          <li><i class="bi bi-check-lg"></i>Member portal</li>
+          <li style="color:#94a3b8;"><i class="bi bi-x-lg" style="color:#e11d48;"></i>SMS &amp; WhatsApp</li>
+          <li style="color:#94a3b8;"><i class="bi bi-x-lg" style="color:#e11d48;"></i>Investments &amp; welfare</li>
+          <li style="color:#94a3b8;"><i class="bi bi-x-lg" style="color:#e11d48;"></i>AGM &amp; voting</li>
+        </ul>
+        <a href="{% url 'tenants:signup' %}" class="btn-price btn-price-dk">Start 30-day free trial</a>
+      </div>
+
+      <!-- Standard (featured) -->
+      <div class="price-card featured">
+        <div class="price-badge">Most Popular</div>
+        <div class="price-name lt">Standard</div>
+        <div class="price-amt lt">KES 999</div>
+        <div class="price-per lt">per month, all features</div>
+        <ul class="price-feats lt">
+          <li><i class="bi bi-check-lg"></i>Everything in Basic</li>
+          <li><i class="bi bi-check-lg"></i>SMS &amp; WhatsApp alerts</li>
+          <li><i class="bi bi-check-lg"></i>Investments &amp; welfare fund</li>
+          <li><i class="bi bi-check-lg"></i>AGM &amp; digital voting</li>
+          <li><i class="bi bi-check-lg"></i>Full financial reports</li>
+          <li><i class="bi bi-check-lg"></i>Double-entry ledger</li>
+          <li><i class="bi bi-check-lg"></i>Unlimited members</li>
+          <li><i class="bi bi-check-lg"></i>Priority support</li>
+        </ul>
+        <a href="{% url 'tenants:signup' %}" class="btn-price btn-price-gr">Start 30-day free trial</a>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="price-card">
+        <div class="price-name dk">Enterprise</div>
+        <div class="price-amt dk">Custom</div>
+        <div class="price-per dk">For large SACCOs &amp; federations</div>
+        <ul class="price-feats dk">
+          <li><i class="bi bi-check-lg"></i>Everything in Standard</li>
+          <li><i class="bi bi-check-lg"></i>Custom branding</li>
+          <li><i class="bi bi-check-lg"></i>API access</li>
+          <li><i class="bi bi-check-lg"></i>Dedicated account manager</li>
+          <li><i class="bi bi-check-lg"></i>SLA &amp; uptime guarantee</li>
+        </ul>
+        <a href="mailto:hello@chamasystem.co.ke" class="btn-price btn-price-ol">Contact us</a>
+      </div>
+
+    </div>
+
+    <!-- Trial note -->
+    <div style="text-align:center;margin-top:2rem;font-size:.88rem;color:var(--muted);">
+      <i class="bi bi-shield-check me-1" style="color:var(--green);"></i>
+      All plans include a <strong>30-day free trial</strong> &mdash; full access, no credit card needed.
+      Cancel anytime.
+    </div>
+  </div>
+</section>
+<!-- CTA -->
+<section class="cta-section">
+  <div style="max-width:640px;margin:0 auto;padding:0 2rem;">
+    <h2 class="cta-h2">Ready to transform your chama?</h2>
+    <p class="cta-p">Join chamas across Kenya already managing their finances with confidence. Set up in minutes, no credit card required.</p>
+    <div style="display:flex;gap:.85rem;justify-content:center;flex-wrap:wrap;">
+      <a href="{% url 'tenants:signup' %}" class="btn-primary-lg"><i class="bi bi-arrow-right-circle-fill"></i>Create your chama &mdash; it's free</a>
+      <a href="/accounts/login/" class="btn-ghost-lg"><i class="bi bi-box-arrow-in-right"></i>Sign in</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <a href="/" class="footer-brand">Chama<span>System</span></a>
+        <p class="footer-tag">The complete management platform for Kenyan table banking groups and investment chamas.</p>
+      </div>
+      <div class="footer-col">
+        <h6>Product</h6>
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#how">How it works</a>
+      </div>
+      <div class="footer-col">
+        <h6>Account</h6>
+        <a href="{% url 'tenants:signup' %}">Register chama</a>
+        <a href="/accounts/login/">Sign in</a>
+        <a href="/accounts/member/login/">Member login</a>
+      </div>
+      <div class="footer-col">
+        <h6>Contact</h6>
+        <a href="mailto:hello@chamasystem.co.ke">hello@chamasystem.co.ke</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; {% now "Y" %} ChamaSystem. All rights reserved.</p>
+      <p><a href="mailto:hello@chamasystem.co.ke" style="color:rgba(255,255,255,.28);text-decoration:none;">hello@chamasystem.co.ke</a></p>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function closeMobileNav() {
+    document.getElementById('mobileNav').classList.remove('open');
+    document.body.style.overflow = '';
+}
+var hamburger = document.getElementById('navHamburger');
+var mobileNavClose = document.getElementById('mobileNavClose');
+if (hamburger) hamburger.addEventListener('click', function () {
+    document.getElementById('mobileNav').classList.add('open');
+    document.body.style.overflow = 'hidden';
+});
+if (mobileNavClose) mobileNavClose.addEventListener('click', closeMobileNav);
+</script>
+</body>
+</html>

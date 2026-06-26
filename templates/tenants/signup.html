@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register Your Chama — Chama System</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+  body{background:#f4f6f9;font-family:'Segoe UI',system-ui,sans-serif;}
+  .card{border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.06);}
+  .section-label{font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:#64748b;font-weight:600;margin-bottom:.75rem;}
+  .slug-preview{font-size:.8rem;color:#2563eb;margin-top:.35rem;}
+</style>
+</head>
+<body>
+
+<div class="min-vh-100 d-flex align-items-center justify-content-center py-5 px-3">
+    <div style="width:100%;max-width:560px;">
+
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <a href="/" class="d-inline-flex align-items-center gap-2 text-decoration-none mb-3">
+                <i class="bi bi-bank2 text-primary fs-3"></i>
+                <span style="font-weight:700;font-size:1.2rem;color:#1e293b;">Chama System</span>
+            </a>
+            <h4 class="fw-bold mb-1">Register your chama</h4>
+            <p class="text-muted small">Set up in under 2 minutes. Free to start.</p>
+        </div>
+
+        <div class="card p-4">
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <!-- Chama details -->
+                <div class="section-label"><i class="bi bi-building me-1"></i>Chama Details</div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">Chama Name <span class="text-danger">*</span></label>
+                    {{ form.chama_name }}
+                    {% if form.chama_name.errors %}<div class="text-danger" style="font-size:.8rem;">{{ form.chama_name.errors }}</div>{% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">Subdomain <span class="text-danger">*</span></label>
+                    {{ form.chama_slug }}
+                    <div class="slug-preview" id="slug-preview">
+                        <i class="bi bi-link-45deg me-1"></i><span id="slug-display">your-chama</span>.yourdomain.com
+                    </div>
+                    {% if form.chama_slug.errors %}<div class="text-danger" style="font-size:.8rem;">{{ form.chama_slug.errors }}</div>{% endif %}
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold small">Contact Phone</label>
+                    {{ form.contact_phone }}
+                    {% if form.contact_phone.errors %}<div class="text-danger" style="font-size:.8rem;">{{ form.contact_phone.errors }}</div>{% endif %}
+                </div>
+
+                <hr class="my-3">
+
+                <!-- Admin account -->
+                <div class="section-label"><i class="bi bi-person-badge me-1"></i>Your Admin Account</div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">Your Full Name <span class="text-danger">*</span></label>
+                    {{ form.admin_name }}
+                    {% if form.admin_name.errors %}<div class="text-danger" style="font-size:.8rem;">{{ form.admin_name.errors }}</div>{% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">Email Address <span class="text-danger">*</span></label>
+                    {{ form.admin_email }}
+                    {% if form.admin_email.errors %}<div class="text-danger" style="font-size:.8rem;">{{ form.admin_email.errors }}</div>{% endif %}
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6">
+                        <label class="form-label fw-semibold small">Password <span class="text-danger">*</span></label>
+                        {{ form.admin_password }}
+                        {% if form.admin_password.errors %}<div class="text-danger" style="font-size:.8rem;">{{ form.admin_password.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label fw-semibold small">Confirm Password <span class="text-danger">*</span></label>
+                        {{ form.admin_password2 }}
+                        {% if form.admin_password2.errors %}<div class="text-danger" style="font-size:.8rem;">{{ form.admin_password2.errors }}</div>{% endif %}
+                    </div>
+                </div>
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger py-2 small">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                    <i class="bi bi-rocket-takeoff me-2"></i>Create My Chama
+                </button>
+            </form>
+        </div>
+
+        <p class="text-center text-muted small mt-3">
+            Already have an account?
+            <a href="/accounts/login/" class="text-primary">Sign in here</a>
+        </p>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Auto-generate slug from chama name
+const nameInput = document.querySelector('[name="chama_name"]');
+const slugInput = document.querySelector('[name="chama_slug"]');
+const slugDisplay = document.getElementById('slug-display');
+let slugEdited = false;
+
+function toSlug(str) {
+    return str.toLowerCase().trim()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .slice(0, 80);
+}
+
+nameInput.addEventListener('input', () => {
+    if (!slugEdited) {
+        const slug = toSlug(nameInput.value);
+        slugInput.value = slug;
+        slugDisplay.textContent = slug || 'your-chama';
+    }
+});
+
+slugInput.addEventListener('input', () => {
+    slugEdited = true;
+    slugDisplay.textContent = slugInput.value || 'your-chama';
+});
+</script>
+</body>
+</html>

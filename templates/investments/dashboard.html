@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Investments{% endblock %}
+{% block page_title %}Investment Portfolio{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3 py-3">
+                <div class="icon-box accent-blue"><i class="bi bi-graph-up-arrow"></i></div>
+                <div>
+                    <div class="stat-label">Total Invested</div>
+                    <div class="stat-value" style="font-size:1.1rem;">KES {{ total_invested|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3 py-3">
+                <div class="icon-box accent-violet"><i class="bi bi-currency-exchange"></i></div>
+                <div>
+                    <div class="stat-label">Portfolio Value</div>
+                    <div class="stat-value" style="font-size:1.1rem;">KES {{ total_current|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3 py-3">
+                <div class="icon-box accent-green"><i class="bi bi-cash-coin"></i></div>
+                <div>
+                    <div class="stat-label">Total Returns</div>
+                    <div class="stat-value" style="font-size:1.1rem;color:#16a34a;">KES {{ total_returns|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3 py-3">
+                <div class="icon-box {% if unrealised_gain >= 0 %}accent-green{% else %}accent-rose{% endif %}">
+                    <i class="bi bi-{% if unrealised_gain >= 0 %}arrow-up{% else %}arrow-down{% endif %}-circle"></i>
+                </div>
+                <div>
+                    <div class="stat-label">Unrealised Gain</div>
+                    <div class="stat-value" style="font-size:1.1rem;" class="{% if unrealised_gain >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        KES {{ unrealised_gain|floatformat:2 }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Portfolio table -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-briefcase me-2"></i>Active Portfolio ({{ active_count }})</span>
+                <div class="d-flex gap-2">
+                    {% if user.profile.is_treasurer %}
+                    <a href="{% url 'investments:add' %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus me-1"></i>Add Investment
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'investments:list' %}" class="btn btn-sm btn-outline-secondary">View All</a>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover table-sm mb-0">
+                    <thead>
+                        <tr><th>Name</th><th>Type</th><th>Invested</th><th>Current Value</th><th>Returns</th><th>ROI</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                    {% for inv in investments %}
+                    <tr>
+                        <td><a href="{% url 'investments:detail' inv.pk %}" class="fw-semibold text-decoration-none">{{ inv.name }}</a></td>
+                        <td><span class="badge bg-secondary">{{ inv.get_investment_type_display }}</span></td>
+                        <td>KES {{ inv.amount_invested|floatformat:2 }}</td>
+                        <td>{% if inv.current_value %}KES {{ inv.current_value|floatformat:2 }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                        <td style="color:#16a34a;">KES {{ inv.total_returns|floatformat:2 }}</td>
+                        <td>
+                            <span class="{% if inv.roi_percent >= 0 %}text-success{% else %}text-danger{% endif %} fw-semibold">
+                                {{ inv.roi_percent }}%
+                            </span>
+                        </td>
+                        <td>
+                            {% if inv.status == 'active' %}<span class="badge bg-success">Active</span>
+                            {% elif inv.status == 'exited' %}<span class="badge bg-secondary">Exited</span>
+                            {% else %}<span class="badge bg-danger">Written Off</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center text-muted py-4">No investments yet.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Breakdown + actions -->
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-pie-chart me-2"></i>By Type</div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Type</th><th class="text-end">Value</th></tr></thead>
+                    <tbody>
+                    {% for label, val in by_type.items %}
+                    <tr>
+                        <td>{{ label }}</td>
+                        <td class="text-end fw-semibold">KES {{ val|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="2" class="text-muted text-center py-2">No data.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="bi bi-lightning me-2"></i>Quick Actions</div>
+            <div class="card-body d-flex flex-column gap-2">
+                {% if user.profile.is_treasurer %}
+                <a href="{% url 'investments:add' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-plus-circle me-2"></i>Add Investment
+                </a>
+                {% endif %}
+                <a href="{% url 'investments:list_print' %}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-printer me-2"></i>Print Portfolio
+                </a>
+                <a href="{% url 'investments:list_csv' %}" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-filetype-csv me-2"></i>Export CSV
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

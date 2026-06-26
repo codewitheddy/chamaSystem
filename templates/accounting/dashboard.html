@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% block title %}Fund Overview{% endblock %}
+{% block page_title %}Fund Overview{% endblock %}
+
+{% block content %}
+<!-- Balance hero -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-blue"><i class="bi bi-wallet2"></i></div>
+                <div>
+                    <div class="stat-label">Current Fund Balance</div>
+                    <div class="stat-value text-primary">KES {{ fund_balance|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-green"><i class="bi bi-arrow-down-circle"></i></div>
+                <div>
+                    <div class="stat-label">Total Credits (In)</div>
+                    <div class="stat-value text-success">KES {{ total_credits|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-rose"><i class="bi bi-arrow-up-circle"></i></div>
+                <div>
+                    <div class="stat-label">Total Debits (Out)</div>
+                    <div class="stat-value text-danger">KES {{ total_debits|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Breakdown -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-green"><i class="bi bi-cash-stack"></i></div>
+                <div>
+                    <div class="stat-label">Contributions</div>
+                    <div class="stat-value">KES {{ total_contributions|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-teal"><i class="bi bi-receipt"></i></div>
+                <div>
+                    <div class="stat-label">Loan Repayments</div>
+                    <div class="stat-value">KES {{ total_repayments|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-violet"><i class="bi bi-percent"></i></div>
+                <div>
+                    <div class="stat-label">Interest Earned</div>
+                    <div class="stat-value">KES {{ total_interest|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-amber"><i class="bi bi-exclamation-triangle"></i></div>
+                <div>
+                    <div class="stat-label">Penalties Collected</div>
+                    <div class="stat-value">KES {{ total_penalties|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-rose"><i class="bi bi-credit-card"></i></div>
+                <div>
+                    <div class="stat-label">Loans Disbursed</div>
+                    <div class="stat-value">KES {{ total_loans_issued|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-rose"><i class="bi bi-bag-dash"></i></div>
+                <div>
+                    <div class="stat-label">Expenses</div>
+                    <div class="stat-value">KES {{ total_expenses|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-blue"><i class="bi bi-person-check"></i></div>
+                <div>
+                    <div class="stat-label">Registration Fees</div>
+                    <div class="stat-value">KES {{ total_reg_fees|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-teal"><i class="bi bi-bank"></i></div>
+                <div>
+                    <div class="stat-label">Other Income</div>
+                    <div class="stat-value">KES {{ total_other_income|floatformat:2 }}</div>
+                    <a href="{% url 'accounting:other_income_list' %}" class="text-muted" style="font-size:.72rem;">View all</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Monthly chart -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-bar-chart me-2"></i>Monthly Cash Flow (Last 12 Months)</span>
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent transactions -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clock-history me-2"></i>Recent Transactions</span>
+                <a href="{% url 'accounting:ledger' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for tx in recent %}
+                    <li class="list-group-item px-3 py-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-500" style="font-size:0.82rem;">{{ tx.description|truncatechars:40 }}</div>
+                                <div class="text-muted" style="font-size:0.75rem;">{{ tx.date }}</div>
+                            </div>
+                            <span class="badge {% if tx.direction == 'credit' %}bg-success{% else %}bg-danger{% endif %} ms-2">
+                                {% if tx.direction == 'credit' %}+{% else %}-{% endif %}{{ tx.amount|floatformat:0 }}
+                            </span>
+                        </div>
+                    </li>
+                    {% empty %}
+                    {% for tx in recent_raw %}
+                    <li class="list-group-item px-3 py-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-500" style="font-size:0.82rem;">{{ tx.description|truncatechars:40 }}</div>
+                                <div class="text-muted" style="font-size:0.75rem;">{{ tx.date }}</div>
+                            </div>
+                            <span class="badge bg-success ms-2">+{{ tx.amount|floatformat:0 }}</span>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-muted text-center py-4">No transactions yet.</li>
+                    {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const labels  = [{% for m in monthly %}"{{ m.label }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+const credits = [{% for m in monthly %}{{ m.credits }}{% if not forloop.last %},{% endif %}{% endfor %}];
+const debits  = [{% for m in monthly %}{{ m.debits }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+new Chart(document.getElementById('monthlyChart'), {
+    type: 'bar',
+    data: {
+        labels,
+        datasets: [
+            { label: 'Credits (In)', data: credits, backgroundColor: '#16a34a' },
+            { label: 'Debits (Out)', data: debits,  backgroundColor: '#e11d48' },
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+{% block title %}Share Capital Configuration{% endblock %}
+{% block page_title %}Share Capital Configuration{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+  <!-- Config form -->
+  <div class="col-lg-7">
+    <form method="post" id="configForm">
+      {% csrf_token %}
+
+      <!-- Par Value -->
+      <div class="card mb-3">
+        <div class="card-header fw-semibold">
+          <i class="bi bi-currency-exchange me-2 text-primary"></i>Share Price (Par Value)
+        </div>
+        <div class="card-body">
+          <div class="row g-3 align-items-center">
+            <div class="col-sm-5">
+              <label class="form-label fw-semibold small">Price per Share (KES) <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text">KES</span>
+                {{ form.par_value }}
+              </div>
+              {% if form.par_value.errors %}<div class="text-danger small mt-1">{{ form.par_value.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-sm-7">
+              <div class="p-3 rounded" style="background:#f0f9ff;border:1px solid #bae6fd;">
+                <div style="font-size:.82rem;color:#0369a1;">
+                  <i class="bi bi-info-circle me-1"></i>
+                  This is the face value of one share. When a member buys 10 shares at KES 100 each,
+                  their share capital is KES 1,000.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Share limits -->
+      <div class="card mb-3">
+        <div class="card-header fw-semibold">
+          <i class="bi bi-sliders me-2 text-warning"></i>Share Limits
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <label class="form-label fw-semibold small">Minimum Shares per Member</label>
+              {{ form.min_shares }}
+              <div class="form-text">Members below this are flagged as "Below Minimum".</div>
+              {% if form.min_shares.errors %}<div class="text-danger small mt-1">{{ form.min_shares.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label fw-semibold small">Maximum Shares per Member</label>
+              {{ form.max_shares }}
+              <div class="form-text">Leave blank for no upper limit.</div>
+              {% if form.max_shares.errors %}<div class="text-danger small mt-1">{{ form.max_shares.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loan multiplier -->
+      <div class="card mb-3">
+        <div class="card-header fw-semibold">
+          <i class="bi bi-credit-card me-2 text-success"></i>Loan Eligibility Multiplier
+        </div>
+        <div class="card-body">
+          <div class="row g-3 align-items-center">
+            <div class="col-sm-5">
+              <label class="form-label fw-semibold small">Multiplier <span class="text-danger">*</span></label>
+              <div class="input-group">
+                {{ form.loan_multiplier }}
+                <span class="input-group-text">&times;</span>
+              </div>
+              {% if form.loan_multiplier.errors %}<div class="text-danger small mt-1">{{ form.loan_multiplier.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-sm-7">
+              <div class="p-3 rounded" style="background:#f0fdf4;border:1px solid #bbf7d0;">
+                <div style="font-size:.82rem;color:#15803d;">
+                  <i class="bi bi-calculator me-1"></i>
+                  Max loan = Share Value &times; Multiplier<br>
+                  <span id="loanExample" class="fw-semibold">e.g. KES 1,000 &times; 3 = KES 3,000 max loan</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-check-lg me-1"></i>Save Configuration
+        </button>
+        <a href="{% url 'shares:dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Live preview + current stats -->
+  <div class="col-lg-5">
+
+    <!-- Live preview -->
+    <div class="card mb-3" style="border:2px solid #e0f2fe;">
+      <div class="card-header fw-semibold" style="background:#f0f9ff;">
+        <i class="bi bi-eye me-2 text-primary"></i>Live Preview
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <div class="text-muted small mb-1">Example: member holds <strong>10 shares</strong></div>
+          <table class="table table-sm table-borderless mb-0" style="font-size:.88rem;">
+            <tr>
+              <td class="text-muted">Share value</td>
+              <td class="fw-semibold text-end" id="prev_value">KES —</td>
+            </tr>
+            <tr>
+              <td class="text-muted">Max loan eligible</td>
+              <td class="fw-semibold text-success text-end" id="prev_loan">KES —</td>
+            </tr>
+            <tr>
+              <td class="text-muted">Min shares required</td>
+              <td class="fw-semibold text-end" id="prev_min">—</td>
+            </tr>
+            <tr>
+              <td class="text-muted">Max shares allowed</td>
+              <td class="fw-semibold text-end" id="prev_max">—</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Current config summary -->
+    <div class="card mb-3">
+      <div class="card-header fw-semibold small">
+        <i class="bi bi-info-circle me-2"></i>Current Settings
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm table-borderless mb-0" style="font-size:.85rem;">
+          <tr>
+            <td class="text-muted ps-3">Par value</td>
+            <td class="fw-semibold pe-3 text-end">KES {{ object.par_value|floatformat:2 }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted ps-3">Min shares</td>
+            <td class="fw-semibold pe-3 text-end">{{ object.min_shares }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted ps-3">Max shares</td>
+            <td class="fw-semibold pe-3 text-end">{{ object.max_shares|default:"No limit" }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted ps-3">Loan multiplier</td>
+            <td class="fw-semibold pe-3 text-end">&times; {{ object.loan_multiplier }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted ps-3">Last updated</td>
+            <td class="text-muted pe-3 text-end small">{{ object.updated_at|date:"d M Y H:i" }}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Help -->
+    <div class="card" style="background:#fffbeb;border-color:#fde68a;">
+      <div class="card-body" style="font-size:.82rem;color:#92400e;">
+        <div class="fw-semibold mb-2"><i class="bi bi-lightbulb me-1"></i>How share capital works</div>
+        <ul class="ps-3 mb-0" style="line-height:1.9;">
+          <li>Members buy shares at the par value price</li>
+          <li>Share capital = shares held &times; par value</li>
+          <li>Loan products set to "Shares basis" use the multiplier to calculate max loan</li>
+          <li>Changing par value does not retroactively change existing transaction amounts</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function fmt(n) {
+  return 'KES ' + parseFloat(n || 0).toLocaleString('en-KE', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function updatePreview() {
+  const par = parseFloat(document.getElementById('id_par_value').value) || 0;
+  const mult = parseFloat(document.getElementById('id_loan_multiplier').value) || 0;
+  const minS = parseInt(document.getElementById('id_min_shares').value) || 0;
+  const maxS = document.getElementById('id_max_shares').value;
+
+  const exShares = 10;
+  const value = par * exShares;
+  const loan = value * mult;
+
+  document.getElementById('prev_value').textContent = fmt(value);
+  document.getElementById('prev_loan').textContent = fmt(loan);
+  document.getElementById('prev_min').textContent = minS + ' shares';
+  document.getElementById('prev_max').textContent = maxS ? maxS + ' shares' : 'No limit';
+  document.getElementById('loanExample').textContent =
+    'e.g. ' + fmt(par * 10) + ' × ' + mult + ' = ' + fmt(loan) + ' max loan';
+}
+
+['id_par_value','id_loan_multiplier','id_min_shares','id_max_shares'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', updatePreview);
+});
+
+// Add Bootstrap classes to form fields
+document.querySelectorAll('#configForm input[type="number"], #configForm input[type="text"]').forEach(el => {
+  el.classList.add('form-control');
+});
+
+updatePreview();
+</script>
+{% endblock %}

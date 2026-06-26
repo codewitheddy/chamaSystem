@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex gap-2">
+        {% if user.profile.is_treasurer %}
+        <a href="{% url 'notifications:broadcast' %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-megaphone me-1"></i>Broadcast
+        </a>
+        {% endif %}
+    </div>
+    <span class="text-muted small">{{ page_obj.paginator.count }} records</span>
+</div>
+
+<div class="card">
+    <div class="card-header"><i class="bi bi-bell me-2"></i>Notification Log</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Member</th>
+                        <th>Event</th>
+                        <th>Subject / Message</th>
+                        <th>Channels</th>
+                        <th>Status</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for group in grouped %}
+                <tr>
+                    <td>{{ group.member|default:"—" }}</td>
+                    <td><span class="badge bg-secondary">{{ group.event_display }}</span></td>
+                    <td class="text-truncate" style="max-width:220px">{{ group.subject|default:group.preview }}</td>
+                    <td>
+                        {% for ch in group.channels %}
+                            {% if ch == 'email' %}<span class="badge bg-info text-dark me-1"><i class="bi bi-envelope"></i> Email</span>
+                            {% elif ch == 'sms' %}<span class="badge bg-warning text-dark me-1"><i class="bi bi-phone"></i> SMS</span>
+                            {% elif ch == 'whatsapp' %}<span class="badge me-1" style="background:#25D366;color:#fff"><i class="bi bi-whatsapp"></i> WhatsApp</span>
+                            {% else %}<span class="badge bg-light text-dark me-1"><i class="bi bi-app"></i> In-App</span>
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% if group.has_failed %}<span class="badge bg-danger">Failed</span>
+                        {% elif group.all_sent %}<span class="badge bg-success">Sent</span>
+                        {% else %}<span class="badge bg-secondary">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-muted small">{{ group.created_at|date:"d M Y H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No notifications yet.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% include "includes/pagination.html" with page_obj=page_obj %}
+{% endblock %}

@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% block title %}User Management{% endblock %}
+{% block page_title %}User Management{% endblock %}
+
+{% block content %}
+
+<!-- Role legend + Add button -->
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div class="d-flex gap-2 flex-wrap align-items-center" style="font-size:.82rem;">
+    <span class="text-muted">Roles:</span>
+    <span class="badge bg-danger">Admin</span><span class="text-muted">full access</span>
+    <span class="badge bg-primary ms-1">Treasurer</span><span class="text-muted">record transactions</span>
+    <span class="badge bg-secondary ms-1">Read Only</span><span class="text-muted">view only</span>
+    <span class="badge bg-info text-dark ms-1">Member Portal</span><span class="text-muted">self-service only</span>
+  </div>
+  <a href="{% url 'accounts:user_add' %}" class="btn btn-primary btn-sm">
+    <i class="bi bi-person-plus me-1"></i>Add User
+  </a>
+</div>
+
+<!-- Elevated members notice -->
+<div class="alert alert-info py-2 small mb-3">
+  <i class="bi bi-info-circle me-1"></i>
+  <strong>Granting rights to members:</strong> Members with a portal account appear below.
+  Change their role to <strong>Treasurer</strong>, <strong>Read Only</strong>, or <strong>Admin</strong>
+  to give them management access. They keep their member link and can still view their statement.
+</div>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-people me-2"></i>System Users</span>
+    <span class="text-muted small">{{ users|length }} user{{ users|length|pluralize }}</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Username</th>
+          <th>Full Name / Member</th>
+          <th>Email</th>
+          <th>Current Role</th>
+          <th>Status</th>
+          <th>Last Login</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr {% if not u.is_active %}class="table-secondary"{% endif %}>
+          <td class="text-muted small">{{ forloop.counter }}</td>
+          <td>
+            <strong>{{ u.username }}</strong>
+            {% if u == request.user %}<span class="badge bg-light text-dark ms-1">You</span>{% endif %}
+          </td>
+          <td>
+            {% if u.profile.member %}
+              <span class="fw-semibold">{{ u.profile.member.name }}</span>
+              <span class="badge bg-light text-muted ms-1" style="font-size:.7rem;">member</span>
+            {% else %}
+              {{ u.get_full_name|default:"—" }}
+            {% endif %}
+          </td>
+          <td class="text-muted small">{{ u.email|default:"—" }}</td>
+          <td>
+            {% with role=u.profile.role %}
+            {% if role == 'admin' %}
+              <span class="badge bg-danger">Admin</span>
+            {% elif role == 'treasurer' %}
+              <span class="badge bg-primary">Treasurer</span>
+            {% elif role == 'member' %}
+              <span class="badge bg-info text-dark">Member Portal</span>
+            {% else %}
+              <span class="badge bg-secondary">Read Only</span>
+            {% endif %}
+            {% if u.profile.member and role != 'member' %}
+              <span class="badge bg-warning text-dark ms-1" title="This member has been granted management access">
+                <i class="bi bi-star-fill"></i> Elevated
+              </span>
+            {% endif %}
+            {% endwith %}
+          </td>
+          <td>
+            {% if u.is_active %}
+              <span class="badge bg-success">Active</span>
+            {% else %}
+              <span class="badge bg-warning text-dark">Inactive</span>
+            {% endif %}
+          </td>
+          <td class="text-muted small">
+            {% if u.last_login %}{{ u.last_login|date:"d M Y H:i" }}{% else %}Never{% endif %}
+          </td>
+          <td>
+            {% if u != request.user %}
+            <div class="d-flex gap-1 flex-wrap">
+              <!-- Inline role change — all roles available -->
+              <form method="post" action="{% url 'accounts:user_role' u.profile.pk %}" class="d-flex gap-1">
+                {% csrf_token %}
+                <select name="role" class="form-select form-select-sm" style="width:140px;">
+                  {% for val, label in role_choices %}
+                  <option value="{{ val }}" {% if val == u.profile.role %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-sm btn-outline-secondary" title="Save role">
+                  <i class="bi bi-check-lg"></i>
+                </button>
+              </form>
+              <!-- Toggle active -->
+              <form method="post" action="{% url 'accounts:user_toggle' u.pk %}">
+                {% csrf_token %}
+                {% if u.is_active %}
+                <button type="submit" class="btn btn-sm btn-outline-warning" title="Deactivate"
+                        onclick="return confirm('Deactivate {{ u.username }}?')">
+                  <i class="bi bi-person-dash"></i>
+                </button>
+                {% else %}
+                <button type="submit" class="btn btn-sm btn-outline-success" title="Activate">
+                  <i class="bi bi-person-check"></i>
+                </button>
+                {% endif %}
+              </form>
+              <!-- Reset password -->
+              <a href="{% url 'accounts:user_reset_password' u.pk %}" class="btn btn-sm btn-outline-secondary" title="Reset password">
+                <i class="bi bi-key"></i>
+              </a>
+            </div>
+            {% else %}
+            <span class="text-muted small">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" class="text-center text-muted py-4">No users found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

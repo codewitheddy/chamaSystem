@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Welfare Contributions{% endblock %}
+{% block page_title %}Welfare Contributions{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+        <span class="text-muted small">Total collected: <strong class="text-success">KES {{ total|floatformat:2 }}</strong></span>
+        <form method="get" class="d-flex gap-1">
+            <input type="text" name="q" value="{{ q }}" class="form-control form-control-sm" placeholder="Search member..." style="width:180px;">
+            <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-search"></i></button>
+            {% if q %}<a href="{% url 'welfare:contribution_list' %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-x"></i></a>{% endif %}
+        </form>
+    </div>
+    <div class="d-flex gap-2">
+        {% if user.profile.is_treasurer %}
+        <a href="{% url 'welfare:contribution_add' %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus me-1"></i>Record
+        </a>
+        <a href="{% url 'welfare:bulk_contribution' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-people me-1"></i>Bulk
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><i class="bi bi-cash-stack me-2"></i>All Welfare Contributions</div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr><th>#</th><th>Member</th><th>Amount</th><th>Date</th><th>Method</th><th>Reference</th><th>Claim</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+            {% for c in contributions %}
+            <tr {% if c.is_voided %}style="opacity:.5"{% endif %}>
+                <td class="text-muted">{{ forloop.counter }}</td>
+                <td class="fw-semibold">{{ c.member.name }}</td>
+                <td {% if not c.is_voided %}style="color:#16a34a;"{% else %}class="text-decoration-line-through text-muted"{% endif %}>
+                    KES {{ c.amount|floatformat:2 }}
+                </td>
+                <td>{{ c.date }}</td>
+                <td>{{ c.get_payment_method_display }}</td>
+                <td class="text-muted small">{{ c.reference|default:"—" }}</td>
+                <td>
+                    {% if c.claim %}
+                    <a href="{% url 'welfare:claim_detail' c.claim.pk %}" class="text-decoration-none small">
+                        Claim #{{ c.claim.pk }}
+                    </a>
+                    {% else %}—{% endif %}
+                </td>
+                <td>
+                    {% if c.is_voided %}
+                    <span class="badge bg-secondary">Voided</span>
+                    {% else %}
+                    <span class="badge bg-success">Valid</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not c.is_voided and user.profile.is_admin %}
+                    <form method="post" action="{% url 'welfare:contribution_void' c.pk %}"
+                          onsubmit="return confirm('Void this contribution?')">
+                        {% csrf_token %}
+                        <input type="hidden" name="reason" value="Voided by admin">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-slash-circle"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="9" class="text-center text-muted py-4">No contributions recorded.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

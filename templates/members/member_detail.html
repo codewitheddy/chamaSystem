@@ -1,0 +1,345 @@
+{% extends 'base.html' %}
+{% block title %}{{ member.name }}{% endblock %}
+{% block page_title %}Member Profile{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+
+    <!-- Profile Card -->
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-body text-center py-4">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3 overflow-hidden"
+                     style="width:72px;height:72px;background:#eff6ff;">
+                    {% if member.profile_photo %}
+                    <img src="{{ member.profile_photo.url }}" alt="{{ member.name }}"
+                         style="width:72px;height:72px;object-fit:cover;">
+                    {% else %}
+                    <i class="bi bi-person-fill" style="font-size:2.2rem;color:#2563eb;"></i>
+                    {% endif %}
+                </div>
+                <h5 class="fw-bold mb-1">{{ member.name }}</h5>
+                <p class="text-muted small mb-1"><i class="bi bi-phone me-1"></i>{{ member.phone }}</p>
+                <p class="text-muted small mb-1"><i class="bi bi-calendar me-1"></i>Joined {{ member.date_joined }}</p>
+                <p class="text-muted small mb-3"><i class="bi bi-cash me-1"></i>Reg. Fee: KES {{ member.registration_fee }}</p>
+                {% if not member.is_active %}
+                <div class="alert py-2 mb-3" style="background:#fff1f2;border-color:#fecaca;color:#e11d48;font-size:0.8rem;">
+                    <i class="bi bi-person-slash me-1"></i>
+                    {% if member.status == 'exited' %}Exited{% if member.exit_date %} on {{ member.exit_date }}{% endif %}
+                    {% else %}Disabled{% endif %}
+                    {% if member.deactivation_reason %} — {{ member.deactivation_reason }}{% endif %}
+                </div>
+                {% if member.status == 'exited' and member.exit_settlement_amount %}
+                <div class="p-2 rounded mb-3 text-start" style="background:#f0fdf4;border:1px solid #bbf7d0;font-size:0.78rem;">
+                    <div class="fw-semibold mb-1" style="color:#15803d;"><i class="bi bi-cash-coin me-1"></i>Exit Settlement</div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Amount</span>
+                        <span class="fw-semibold">KES {{ member.exit_settlement_amount|floatformat:2 }}</span>
+                    </div>
+                    {% if member.exit_settlement_method %}
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Method</span>
+                        <span>{{ member.get_exit_settlement_method_display }}</span>
+                    </div>
+                    {% endif %}
+                    {% if member.exit_settlement_ref %}
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Reference</span>
+                        <span>{{ member.exit_settlement_ref }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% endif %}
+                <div class="d-flex gap-2 justify-content-center flex-wrap">
+                    {% if member.status == 'exited' %}
+                    <a href="{% url 'members:exited_statement' member.pk %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-printer me-1"></i>View Statement
+                    </a>
+                    <a href="{% url 'members:list' %}" class="btn btn-sm btn-outline-secondary">Back</a>
+                    {% else %}
+                    <a href="{% url 'members:edit' member.pk %}" class="btn btn-sm btn-outline-warning">
+                        <i class="bi bi-pencil me-1"></i>Edit
+                    </a>
+                    <a href="{% url 'shares:member_account' member.pk %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-grid-3x3-gap me-1"></i>Shares
+                    </a>
+                    {% if user.profile.is_admin %}
+                    <a href="{% url 'members:edit' member.pk %}" class="btn btn-sm btn-outline-warning">
+                        <i class="bi bi-pencil me-1"></i>Edit
+                    </a>
+                    <a href="{% url 'shares:member_account' member.pk %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-grid-3x3-gap me-1"></i>Shares
+                    </a>
+                    {% endif %}
+                    {% if member.status == 'active' %}
+                    <a href="{% url 'members:disable' member.pk %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-person-slash me-1"></i>Disable
+                    </a>
+                    <a href="{% url 'members:exit' member.pk %}" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-door-open me-1"></i>Exit Member
+                    </a>
+                    {% elif member.status == 'disabled' %}
+                    <form method="post" action="{% url 'members:enable' member.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-person-check me-1"></i>Re-enable
+                        </button>
+                    </form>
+                    <a href="{% url 'members:exit' member.pk %}" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-door-open me-1"></i>Exit Member
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'members:list' %}" class="btn btn-sm btn-outline-secondary">Back</a>
+                    {% endif %}
+                    <!-- Statement exports — always visible -->
+                    <a href="{% url 'reports:member_statement_print' member.pk %}"
+                       target="_blank" class="btn btn-sm btn-outline-secondary" title="Print Statement">
+                        <i class="bi bi-printer me-1"></i>Print
+                    </a>
+                    <a href="{% url 'reports:member_statement_csv' member.pk %}"
+                       class="btn btn-sm btn-outline-success" title="Download CSV">
+                        <i class="bi bi-filetype-csv me-1"></i>CSV
+                    </a>
+                </div>
+
+                {% if user.profile.is_admin %}
+                <!-- Portal Account -->
+                <div class="mt-3 pt-3 border-top">
+                    <div class="text-muted small fw-semibold mb-2"><i class="bi bi-person-badge me-1"></i>Member Portal Access</div>
+                    {% if member.portal_user %}
+                    <div class="alert py-2 mb-2" style="background:#f0fdf4;border-color:#bbf7d0;color:#15803d;font-size:.8rem;">
+                        <i class="bi bi-check-circle me-1"></i>Portal account active &mdash; username: <strong>{{ member.phone }}</strong>
+                    </div>
+                    {% endif %}
+                    <form method="post" action="{% url 'accounts:create_portal_account' member.pk %}" class="d-flex gap-2 align-items-center flex-wrap">
+                        {% csrf_token %}
+                        <input type="password" name="password" class="form-control form-control-sm" style="max-width:160px;"
+                               placeholder="Set password" minlength="6" required>
+                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-key me-1"></i>{% if member.portal_user %}Reset Password{% else %}Create Portal Account{% endif %}
+                        </button>
+                    </form>
+                    <div class="text-muted mt-1" style="font-size:.75rem;">Member logs in at <code>/accounts/member/login/</code> using their phone number.</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- KYC Documents -->
+        {% if member.id_front or member.id_back or member.next_of_kin_name %}
+        <div class="card mb-3">
+            <div class="card-header fw-semibold"><i class="bi bi-card-image me-2"></i>KYC & Next of Kin</div>
+            <div class="card-body">
+                {% if member.id_front or member.id_back %}
+                <div class="fw-semibold text-muted mb-2" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;">
+                    <i class="bi bi-person-vcard me-1"></i>National ID
+                </div>
+                <div class="row g-2 mb-3">
+                    {% if member.id_front %}
+                    <div class="col-6 text-center">
+                        <a href="{{ member.id_front.url }}" target="_blank">
+                            <img src="{{ member.id_front.url }}" class="img-thumbnail" style="max-height:70px;" alt="ID Front">
+                        </a>
+                        <div class="text-muted" style="font-size:.7rem;">ID Front</div>
+                    </div>
+                    {% endif %}
+                    {% if member.id_back %}
+                    <div class="col-6 text-center">
+                        <a href="{{ member.id_back.url }}" target="_blank">
+                            <img src="{{ member.id_back.url }}" class="img-thumbnail" style="max-height:70px;" alt="ID Back">
+                        </a>
+                        <div class="text-muted" style="font-size:.7rem;">ID Back</div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% if member.next_of_kin_name %}
+                <div class="{% if member.id_front or member.id_back %}border-top pt-2{% endif %}" style="font-size:.82rem;">
+                    <div class="fw-semibold text-muted mb-1" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;">
+                        <i class="bi bi-people me-1"></i>Next of Kin
+                    </div>
+                    <div class="fw-semibold">{{ member.next_of_kin_name }}</div>
+                    {% if member.next_of_kin_phone %}<div class="text-muted"><i class="bi bi-phone me-1"></i>{{ member.next_of_kin_phone }}</div>{% endif %}
+                    {% if member.next_of_kin_relation %}<div class="text-muted"><i class="bi bi-diagram-3 me-1"></i>{{ member.next_of_kin_relation }}</div>{% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Summary Stats -->
+        <div class="card">
+            <div class="card-header">Financial Summary</div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <tr>
+                        <td class="text-muted ps-3">Total Contributions</td>
+                        <td class="fw-semibold pe-3 text-end" style="color:#16a34a;">
+                            KES {{ member.total_contributions|floatformat:2 }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted ps-3">Total Loans</td>
+                        <td class="fw-semibold pe-3 text-end" style="color:#d97706;">
+                            KES {{ member.total_loans|floatformat:2 }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted ps-3">Loan Balance</td>
+                        <td class="fw-semibold pe-3 text-end text-danger">
+                            KES {{ member.total_loan_balance|floatformat:2 }}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity -->
+    <div class="col-md-8">
+
+        <!-- Contributions -->
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-cash-stack me-2"></i>Contributions</span>
+                {% if member.status != 'exited' %}
+                <a href="{% url 'contributions:add' %}" class="btn btn-sm btn-outline-success">
+                    <i class="bi bi-plus me-1"></i>Add
+                </a>
+                {% endif %}
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr><th>Month</th><th>Year</th><th>Amount</th><th>Date</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for c in contributions %}
+                        <tr>
+                            <td>{{ c.get_month_display }}</td>
+                            <td>{{ c.year }}</td>
+                            <td style="color:#16a34a;">KES {{ c.amount|floatformat:2 }}</td>
+                            <td>{{ c.date }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-muted text-center py-3">No contributions.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Loans -->
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-credit-card me-2"></i>Loans</span>
+                {% if member.status != 'exited' %}
+                <a href="{% url 'loans:add' %}" class="btn btn-sm btn-outline-warning">
+                    <i class="bi bi-plus me-1"></i>Issue
+                </a>
+                {% endif %}
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr><th>Amount</th><th>Interest</th><th>Total</th><th>Balance</th><th>Status</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        {% for l in loans %}
+                        <tr>
+                            <td>KES {{ l.loan_amount|floatformat:2 }}</td>
+                            <td style="color:#16a34a;">KES {{ l.interest_amount|floatformat:2 }}</td>
+                            <td>KES {{ l.total_payable|floatformat:2 }}</td>
+                            <td class="{% if l.balance == 0 %}text-success{% else %}text-danger{% endif %} fw-semibold">
+                                KES {{ l.balance|floatformat:2 }}
+                            </td>
+                            <td>
+                                {% if l.status == 'cleared' %}
+                                    <span class="badge" style="background:#f0fdf4;color:#16a34a;">Cleared</span>
+                                {% elif l.status == 'late' %}
+                                    <span class="badge" style="background:#fff1f2;color:#e11d48;">Late</span>
+                                {% else %}
+                                    <span class="badge" style="background:#fffbeb;color:#d97706;">Active</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'loans:detail' l.pk %}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-muted text-center py-3">No loans.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Payments -->
+        <div class="card">
+            <div class="card-header"><i class="bi bi-receipt me-2"></i>Loan Payments</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr><th>Loan</th><th>Amount</th><th>Date</th><th>Notes</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for p in payments %}
+                        <tr>
+                            <td>KES {{ p.loan.loan_amount|floatformat:2 }}</td>
+                            <td style="color:#2563eb;">KES {{ p.amount|floatformat:2 }}</td>
+                            <td>{{ p.date }}</td>
+                            <td>{{ p.notes|default:"—" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-muted text-center py-3">No payments.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Guarantees Given -->
+        <div class="card mt-3">
+            <div class="card-header"><i class="bi bi-shield-check me-2"></i>Loans Guaranteed</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr><th>Borrower</th><th>Loan Amount</th><th>Guaranteed</th><th>Balance</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for g in guarantees %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'loans:detail' g.loan.pk %}" class="fw-semibold text-decoration-none">
+                                    {{ g.loan.member.name }}
+                                </a>
+                            </td>
+                            <td>KES {{ g.loan.loan_amount|floatformat:2 }}</td>
+                            <td style="color:#2563eb;">KES {{ g.amount_guaranteed|floatformat:2 }}</td>
+                            <td class="{% if g.loan.balance == 0 %}text-success{% else %}text-danger{% endif %} fw-semibold">
+                                KES {{ g.loan.balance|floatformat:2 }}
+                            </td>
+                            <td>
+                                {% if g.loan.status == 'cleared' %}
+                                    <span class="badge" style="background:#f0fdf4;color:#16a34a;">Cleared</span>
+                                {% elif g.loan.status == 'late' %}
+                                    <span class="badge" style="background:#fff1f2;color:#e11d48;">Late</span>
+                                {% else %}
+                                    <span class="badge" style="background:#fffbeb;color:#d97706;">Active</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-muted text-center py-3">Not guaranteeing any loans.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

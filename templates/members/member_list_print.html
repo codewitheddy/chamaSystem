@@ -1,0 +1,31 @@
+{% extends "includes/print_base.html" %}
+{% block print_title %}Members List{% endblock %}
+{% block print_heading %}Members List{% endblock %}
+{% block print_meta %}
+  Status: {{ status_label }} &nbsp;|&nbsp; Total: {{ members|length }} &nbsp;|&nbsp; {% now "d M Y" %}
+{% endblock %}
+{% block print_body %}
+<table>
+  <thead>
+    <tr><th>#</th><th>Name</th><th>Phone</th><th>Email</th><th>Reg. Fee</th><th>Joined</th><th>Status</th></tr>
+  </thead>
+  <tbody>
+  {% for m in members %}
+  <tr>
+    <td>{{ forloop.counter }}</td>
+    <td><strong>{{ m.name }}</strong></td>
+    <td>{{ m.phone }}</td>
+    <td>{{ m.email|default:"—" }}</td>
+    <td>KES {{ m.registration_fee|floatformat:2 }}</td>
+    <td>{{ m.date_joined }}</td>
+    <td>
+      {% if m.status == 'active' %}<span class="badge-green">Active</span>
+      {% elif m.status == 'exited' %}<span class="badge-gray">Exited</span>
+      {% else %}<span class="badge-red">Disabled</span>{% endif %}
+    </td>
+  </tr>
+  {% empty %}<tr><td colspan="7">No members found.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

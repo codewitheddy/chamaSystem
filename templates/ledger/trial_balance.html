@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Trial Balance{% endblock %}
+{% block page_title %}Trial Balance{% endblock %}
+
+{% block content %}
+{% include "ledger/date_filter.html" %}
+
+{% if not balanced %}
+<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>Trial balance is <strong>not balanced</strong>. Total debits ≠ total credits.</div>
+{% else %}
+<div class="alert alert-success"><i class="bi bi-check-circle me-2"></i>Trial balance is balanced.</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-table me-2"></i>Trial Balance — {{ date_from }} to {{ date_to }}</span>
+        <button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer me-1"></i>Print</button>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm mb-0">
+            <thead>
+                <tr><th>Code</th><th>Account</th><th>Type</th><th class="text-end">Debit</th><th class="text-end">Credit</th></tr>
+            </thead>
+            <tbody>
+            {% for row in rows %}
+            <tr>
+                <td class="text-muted">{{ row.account.code }}</td>
+                <td>{{ row.account.name }}</td>
+                <td><span class="badge bg-light text-dark border">{{ row.account.get_account_type_display }}</span></td>
+                <td class="text-end text-success">{% if row.debit %}KES {{ row.debit|floatformat:2 }}{% endif %}</td>
+                <td class="text-end text-danger">{% if row.credit %}KES {{ row.credit|floatformat:2 }}{% endif %}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center text-muted py-4">No account balances for this period.</td></tr>
+            {% endfor %}
+            </tbody>
+            <tfoot class="table-light">
+                <tr>
+                    <td colspan="3" class="fw-bold text-end">TOTALS</td>
+                    <td class="text-end fw-bold text-success">KES {{ total_debit|floatformat:2 }}</td>
+                    <td class="text-end fw-bold text-danger">KES {{ total_credit|floatformat:2 }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% endblock %}

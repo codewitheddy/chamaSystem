@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% block title %}Subscription — {{ chama.name }}{% endblock %}
+{% block page_title %}Subscription & Billing{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+  <!-- Current status -->
+  <div class="col-lg-4">
+    <div class="card mb-3">
+      <div class="card-header fw-semibold"><i class="bi bi-shield-check me-2"></i>Current Plan</div>
+      <div class="card-body">
+        {% if chama.plan == 'standard' %}
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-primary fs-6">Standard</span>
+            <span class="text-muted small">KES 999/mo</span>
+          </div>
+        {% elif chama.plan == 'basic' %}
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-info text-dark fs-6">Basic</span>
+            <span class="text-muted small">KES 500/mo</span>
+          </div>
+        {% elif chama.plan == 'enterprise' %}
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-dark fs-6">Enterprise</span>
+            <span class="text-muted small">KES {{ chama.plan_price|floatformat:0 }}/mo</span>
+          </div>
+        {% elif chama.is_on_trial %}
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-warning text-dark fs-6">Free Trial</span>
+          </div>
+          <div class="alert alert-warning py-2 mb-2" style="font-size:.85rem;">
+            <i class="bi bi-clock me-1"></i>
+            <strong>{{ chama.trial_days_left }} day{{ chama.trial_days_left|pluralize }} left</strong>
+            — trial expires {{ chama.trial_ends }}
+          </div>
+        {% elif chama.trial_expired %}
+          <div class="alert alert-danger py-2 mb-2" style="font-size:.85rem;">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            Trial expired on {{ chama.trial_ends }}. Upgrade to continue.
+          </div>
+        {% endif %}
+
+        {% if chama.subscription_end %}
+        <div class="text-muted small">
+          <i class="bi bi-calendar me-1"></i>
+          Subscription valid until <strong>{{ chama.subscription_end }}</strong>
+        </div>
+        {% endif %}
+        {% if chama.months_paid %}
+        <div class="text-muted small mt-1">
+          <i class="bi bi-receipt me-1"></i>
+          {{ chama.months_paid }} month{{ chama.months_paid|pluralize }} paid &middot;
+          KES {{ chama.total_revenue|floatformat:0 }} total
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Payment instructions -->
+    <div class="card" style="background:#f0fdf4;border-color:#bbf7d0;">
+      <div class="card-header fw-semibold" style="background:#dcfce7;border-color:#bbf7d0;">
+        <i class="bi bi-phone me-2" style="color:#16a34a;"></i>How to Pay via M-Pesa
+      </div>
+      <div class="card-body" style="font-size:.88rem;">
+        <ol class="ps-3 mb-3" style="line-height:2;">
+          <li>Go to <strong>M-Pesa</strong> on your phone</li>
+          <li>Select <strong>Lipa na M-Pesa &rarr; Pay Bill</strong></li>
+          <li>Business No: <strong class="text-success" style="font-size:1.1rem;">{{ paybill }}</strong></li>
+          <li>Account No: <strong class="text-success" style="font-size:1.1rem;">{{ account }}</strong></li>
+          <li>Enter the amount for your chosen plan</li>
+          <li>Enter your M-Pesa PIN and confirm</li>
+          <li>Copy the <strong>transaction code</strong> from the SMS</li>
+          <li>Submit the code in the form &rarr;</li>
+        </ol>
+        <div class="border rounded p-2" style="background:#fff;font-size:.82rem;">
+          <div class="text-muted mb-1">Payment amounts:</div>
+          <div><strong>Basic:</strong> KES 500/month</div>
+          <div><strong>Standard:</strong> KES 999/month</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit payment -->
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header fw-semibold"><i class="bi bi-send me-2"></i>Submit Payment Reference</div>
+      <div class="card-body">
+        <p class="text-muted small mb-3">
+          After paying via M-Pesa, enter your transaction code below.
+          Your subscription will be activated within <strong>24 hours</strong> after verification.
+        </p>
+        <form method="post" action="{% url 'tenants:subscription_submit' %}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Select Plan <span class="text-danger">*</span></label>
+            <div class="row g-2">
+              <div class="col-6">
+                <label class="d-block" style="cursor:pointer;">
+                  <input type="radio" name="plan" value="basic" class="d-none" id="plan_basic">
+                  <div class="border rounded-3 p-3 text-center plan-opt" id="opt_basic">
+                    <div class="fw-bold">Basic</div>
+                    <div style="font-size:1.3rem;font-weight:900;color:#0891b2;">KES 500</div>
+                    <div style="font-size:.72rem;color:#64748b;">/month</div>
+                  </div>
+                </label>
+              </div>
+              <div class="col-6">
+                <label class="d-block" style="cursor:pointer;">
+                  <input type="radio" name="plan" value="standard" class="d-none" id="plan_standard" checked>
+                  <div class="border border-primary rounded-3 p-3 text-center plan-opt" id="opt_standard" style="border-width:2px!important;">
+                    <div class="fw-bold">Standard <span class="badge bg-primary" style="font-size:.6rem;">Popular</span></div>
+                    <div style="font-size:1.3rem;font-weight:900;color:#2563eb;">KES 999</div>
+                    <div style="font-size:.72rem;color:#64748b;">/month</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Number of Months <span class="text-danger">*</span></label>
+            <select name="months" class="form-select" id="months_select">
+              <option value="1">1 month</option>
+              <option value="3">3 months</option>
+              <option value="6">6 months</option>
+              <option value="12">12 months (1 year)</option>
+            </select>
+            <div class="text-muted small mt-1">
+              Total: <strong id="total_amount">KES 999</strong>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">M-Pesa Transaction Code <span class="text-danger">*</span></label>
+            <input type="text" name="mpesa_ref" class="form-control text-uppercase"
+                   placeholder="e.g. QHX7Y8Z9AB" maxlength="20" required
+                   style="letter-spacing:2px;font-weight:600;">
+            <div class="text-muted small mt-1">The code from your M-Pesa confirmation SMS</div>
+          </div>
+
+          <button type="submit" class="btn btn-success w-100">
+            <i class="bi bi-send me-2"></i>Submit Payment Reference
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Past requests -->
+  <div class="col-lg-3">
+    <div class="card">
+      <div class="card-header fw-semibold small"><i class="bi bi-clock-history me-2"></i>Payment History</div>
+      {% with requests=chama.payment_requests.all %}
+      {% if requests %}
+      <div class="list-group list-group-flush">
+        {% for req in requests|slice:":8" %}
+        <div class="list-group-item px-3 py-2" style="font-size:.8rem;">
+          <div class="d-flex justify-content-between">
+            <span class="fw-semibold">{{ req.mpesa_ref }}</span>
+            {% if req.status == 'verified' %}<span class="badge bg-success">Verified</span>
+            {% elif req.status == 'rejected' %}<span class="badge bg-danger">Rejected</span>
+            {% else %}<span class="badge bg-warning text-dark">Pending</span>{% endif %}
+          </div>
+          <div class="text-muted">{{ req.get_plan_display|default:req.plan }} &middot; {{ req.months }}mo &middot; KES {{ req.amount|floatformat:0 }}</div>
+          <div class="text-muted">{{ req.submitted_at|date:"d M Y" }}</div>
+          {% if req.rejection_reason %}
+          <div class="text-danger small">{{ req.rejection_reason }}</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="card-body text-muted small text-center py-3">No payments submitted yet.</div>
+      {% endif %}
+      {% endwith %}
+    </div>
+
+    <div class="card mt-3">
+      <div class="card-header fw-semibold small"><i class="bi bi-headset me-2"></i>Need Help?</div>
+      <div class="card-body small text-muted">
+        <p class="mb-2">Contact us if your subscription hasn't been activated after 24 hours.</p>
+        <a href="mailto:{{ billing_email }}" class="btn btn-outline-primary btn-sm w-100 mb-2">
+          <i class="bi bi-envelope me-1"></i>{{ billing_email }}
+        </a>
+        {% if billing_phone %}
+        <a href="tel:{{ billing_phone }}" class="btn btn-outline-success btn-sm w-100">
+          <i class="bi bi-whatsapp me-1"></i>{{ billing_phone }}
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const prices = {basic: 500, standard: 999};
+let selectedPlan = 'standard';
+
+document.querySelectorAll('input[name="plan"]').forEach(radio => {
+  radio.addEventListener('change', function() {
+    selectedPlan = this.value;
+    document.getElementById('opt_basic').className = 'border rounded-3 p-3 text-center plan-opt';
+    document.getElementById('opt_standard').className = 'border rounded-3 p-3 text-center plan-opt';
+    if (this.value === 'standard') {
+      document.getElementById('opt_standard').className = 'border border-primary rounded-3 p-3 text-center plan-opt';
+      document.getElementById('opt_standard').style.borderWidth = '2px';
+    } else {
+      document.getElementById('opt_basic').className = 'border border-info rounded-3 p-3 text-center plan-opt';
+    }
+    updateTotal();
+  });
+});
+
+document.getElementById('months_select').addEventListener('change', updateTotal);
+
+function updateTotal() {
+  const months = parseInt(document.getElementById('months_select').value);
+  const total = prices[selectedPlan] * months;
+  document.getElementById('total_amount').textContent = 'KES ' + total.toLocaleString();
+}
+</script>
+{% endblock %}

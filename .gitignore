@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Django
+*.log
+db.sqlite3
+staticfiles/
+media/
+
+# Keep directory structure but ignore contents
+logs/*
+!logs/.gitkeep
+tmp/*
+!tmp/.gitkeep
+
+# Environment
+.env
+*.env
+
+# Docker
+.dockerignore
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Minutes — {{ object.title }}{% endblock %}
+{% block page_title %}Meeting Minutes — {{ object.title }}{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+<style>
+    .ql-container { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.875rem; }
+    .ql-editor { min-height: 320px; color: #1e293b; line-height: 1.7; }
+    .ql-toolbar.ql-snow { border-radius: 6px 6px 0 0; border-color: #dee2e6; background: #f8fafc; }
+    .ql-container.ql-snow { border-radius: 0 0 6px 6px; border-color: #dee2e6; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-file-text me-2"></i>{{ object.date }} — {{ object.venue|default:"" }}
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate id="minutes-form">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Minutes</label>
+                        <!-- Hidden textarea that gets submitted -->
+                        <textarea id="id_minutes" name="minutes" style="display:none;">{{ form.minutes.value|default:'' }}</textarea>
+                        <!-- Quill editor container -->
+                        <div id="quill-editor"></div>
+                        {% if form.minutes.errors %}
+                            <div class="text-danger small mt-1">{{ form.minutes.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-text mt-1">Record what was discussed, decisions made, and action items.</div>
+                    </div>
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-1"></i>Save Minutes
+                        </button>
+                        <a href="{% url 'meetings:detail' object.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+<script>
+    const quill = new Quill('#quill-editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ header: [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline'],
+                [{ list: 'ordered' }, { list: 'bullet' }],
+                [{ indent: '-1' }, { indent: '+1' }],
+                ['link', 'clean']
+            ]
+        }
+    });
+
+    // Load existing content
+    const existing = document.getElementById('id_minutes').value;
+    if (existing) {
+        quill.root.innerHTML = existing;
+    }
+
+    // Before submit, copy Quill HTML into the hidden textarea
+    document.getElementById('minutes-form').addEventListener('submit', function() {
+        document.getElementById('id_minutes').value = quill.root.innerHTML;
+    });
+</script>
+{% endblock %}

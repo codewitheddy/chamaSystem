@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Loan Settings{% endblock %}
+{% block page_title %}Loan Products & Settings{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-end mb-3">
+    <a href="{% url 'loans:product_add' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg me-1"></i>Add Product
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header"><i class="bi bi-sliders me-2"></i>Configured Loan Products</div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Interest Method</th>
+                    <th>Monthly Rate</th>
+                    <th>Max Period</th>
+                    <th>Max Amount Basis</th>
+                    <th>Max Amount</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr>
+                    <td class="fw-semibold">{{ p.name }}</td>
+                    <td>{{ p.get_loan_type_display }}</td>
+                    <td>{{ p.get_interest_method_display }}</td>
+                    <td>
+                        {% if p.interest_method == 'none' %}
+                            <span class="text-muted">—</span>
+                        {% else %}
+                            {{ p.interest_rate_percent }}%
+                        {% endif %}
+                    </td>
+                    <td>{{ p.max_duration_months }} month{{ p.max_duration_months|pluralize }}</td>
+                    <td>{{ p.get_max_amount_basis_display }}</td>
+                    <td>
+                        {% if p.max_amount_basis == 'contributions' %}
+                            <span class="text-muted small">Per member</span>
+                        {% elif p.max_amount_basis == 'fixed' and p.max_amount %}
+                            KES {{ p.max_amount|floatformat:2 }}
+                        {% else %}
+                            <span class="text-muted">No limit</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if p.is_active %}
+                            <span class="badge" style="background:#f0fdf4;color:#16a34a;">Active</span>
+                        {% else %}
+                            <span class="badge" style="background:#f1f5f9;color:#64748b;">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'loans:product_edit' p.pk %}" class="btn btn-sm btn-outline-secondary" style="padding:2px 10px;">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="{% url 'loans:product_delete' p.pk %}" class="btn btn-sm btn-outline-danger" style="padding:2px 10px;">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center py-5 text-muted">
+                        <i class="bi bi-sliders" style="font-size:2rem;display:block;margin-bottom:0.5rem;"></i>
+                        No loan products configured yet.
+                        <a href="{% url 'loans:product_add' %}" class="ms-2">Add one now</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="alert mt-3" style="background:#eff6ff;border-color:#bfdbfe;color:#1e40af;font-size:0.85rem;">
+    <i class="bi bi-info-circle me-2"></i>
+    Loan products define the interest method, rate, and limits applied when issuing a loan.
+    When "Member's Total Contributions" is selected as the basis, each member's limit is calculated individually at the time of application.
+</div>
+{% endblock %}

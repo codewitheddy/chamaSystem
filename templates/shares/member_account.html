@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}{{ account.member.name }} — Shares{% endblock %}
+{% block page_title %}{{ account.member.name }} — Share Account{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+    <div class="col-sm-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="stat-label">Shares Held</div>
+                <div class="stat-value">{{ account.shares_held }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="stat-label">Share Value</div>
+                <div class="stat-value text-success">KES {{ account.share_value|floatformat:2 }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="stat-label">Max Loan (shares basis)</div>
+                <div class="stat-value">KES {{ account.max_loan_from_shares|floatformat:2 }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="stat-label">Standing</div>
+                <div class="stat-value">
+                    {% if account.is_in_good_standing %}
+                    <span class="badge bg-success fs-6">Good</span>
+                    {% else %}
+                    <span class="badge bg-danger fs-6">Below Min ({{ config.min_shares }})</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-clock-history me-2"></i>Share Transactions</span>
+        <div class="d-flex gap-2">
+            <a href="{% url 'shares:purchase' account.member.pk %}" class="btn btn-sm btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Buy Shares
+            </a>
+            <a href="{% url 'shares:adjust' account.member.pk %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-pencil me-1"></i>Adjust
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th class="text-end">Shares</th>
+                        <th class="text-end">Amount (KES)</th>
+                        <th>Reference</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in transactions %}
+                    <tr>
+                        <td>{{ tx.date }}</td>
+                        <td>
+                            <span class="badge {% if tx.transaction_type == 'purchase' or tx.transaction_type == 'bonus' or tx.transaction_type == 'transfer_in' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ tx.get_transaction_type_display }}
+                            </span>
+                        </td>
+                        <td class="text-end">{{ tx.shares }}</td>
+                        <td class="text-end">{{ tx.amount|floatformat:2 }}</td>
+                        <td class="text-muted small">{{ tx.reference|default:"—" }}</td>
+                        <td class="text-muted small">{{ tx.notes|default:"—" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">No transactions yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<a href="{% url 'shares:dashboard' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i>Back to Share Capital
+</a>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Message {{ member.name }}{% endblock %}
+{% block page_title %}Send Message to {{ member.name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-7">
+<div class="card">
+    <div class="card-header"><i class="bi bi-chat-dots me-2"></i>Message — {{ member.name }}</div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Subject</label>
+                <input type="text" name="subject" class="form-control" value="{{ form.subject.value|default:'' }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Message</label>
+                <textarea name="message" class="form-control" rows="6" required>{{ form.message.value|default:'' }}</textarea>
+            </div>
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Channels</label>
+                <div class="d-flex gap-4 flex-wrap">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="send_email" id="ch_email" checked>
+                        <label class="form-check-label" for="ch_email"><i class="bi bi-envelope me-1 text-info"></i>Email</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="send_sms" id="ch_sms" checked>
+                        <label class="form-check-label" for="ch_sms"><i class="bi bi-phone me-1 text-warning"></i>SMS</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="send_whatsapp" id="ch_wa">
+                        <label class="form-check-label" for="ch_wa"><i class="bi bi-whatsapp me-1" style="color:#25D366"></i>WhatsApp</label>
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-send me-1"></i>Send</button>
+                <a href="{% url 'notifications:inbox' %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+</div>
+{% endblock %}

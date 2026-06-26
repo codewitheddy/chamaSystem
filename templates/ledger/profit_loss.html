@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Profit &amp; Loss{% endblock %}
+{% block page_title %}Profit &amp; Loss Statement{% endblock %}
+
+{% block content %}
+
+<!-- Toolbar: date filter + print -->
+<div class="card mb-4">
+  <div class="card-body py-2">
+    <form method="get" class="d-flex gap-3 align-items-center flex-wrap">
+      <div class="d-flex align-items-center gap-2">
+        <label class="form-label mb-0 small fw-semibold text-nowrap">From</label>
+        <input type="date" name="date_from" class="form-control form-control-sm" value="{{ date_from }}" style="width:140px;">
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <label class="form-label mb-0 small fw-semibold text-nowrap">To</label>
+        <input type="date" name="date_to" class="form-control form-control-sm" value="{{ date_to }}" style="width:140px;">
+      </div>
+      <button type="submit" class="btn btn-sm btn-primary">Apply</button>
+      <span class="text-muted small">{{ date_from }} &rarr; {{ date_to }}</span>
+      <div class="ms-auto">
+        <button type="button" onclick="window.print()" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-printer me-1"></i>Print
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Statement -->
+<div class="card">
+
+  <!-- Header -->
+  <div class="card-header d-flex justify-content-between align-items-center py-3" style="background:#1e2a3a;">
+    <div>
+      <div class="fw-bold text-white" style="font-size:1rem;">
+        {% if request.chama %}{{ request.chama.name }} &mdash; {% endif %}Profit &amp; Loss Statement
+      </div>
+      <div class="text-white-50 small mt-1">Period: {{ date_from }} to {{ date_to }}</div>
+    </div>
+    <div class="text-end">
+      <div class="fw-bold" style="font-size:1.4rem;color:{% if net_profit >= 0 %}#4ade80{% else %}#f87171{% endif %};">
+        KES {{ net_profit|floatformat:2 }}
+      </div>
+      <div class="small" style="color:rgba(255,255,255,.5);">
+        Net {% if net_profit >= 0 %}Profit{% else %}Loss{% endif %}
+        {% if profit_margin %}&nbsp;&middot;&nbsp;{{ profit_margin }}% margin{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-sm mb-0" style="font-size:.9rem;">
+
+      <!-- ── INCOME ── -->
+      <tbody>
+        <tr style="background:#f0fdf4;">
+          <td colspan="2" style="color:#15803d;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.6px;padding:.55rem 1rem;">
+            <i class="bi bi-arrow-down-circle-fill me-1"></i>Income
+          </td>
+          <td class="text-end" style="color:#15803d;font-size:.78rem;font-weight:600;padding:.55rem 1rem;">Amount (KES)</td>
+        </tr>
+        {% for row in income_rows %}
+        <tr>
+          <td class="text-muted" style="width:70px;padding-left:1.25rem;font-size:.82rem;">{{ row.account.code }}</td>
+          <td>
+            <span>{{ row.account.name }}</span>
+            {% if row.pct and income_rows|length > 1 %}
+            <div style="height:3px;background:#e2e8f0;border-radius:99px;max-width:180px;margin-top:3px;">
+              <div style="height:3px;background:#16a34a;border-radius:99px;width:{{ row.pct }}%;"></div>
+            </div>
+            {% endif %}
+          </td>
+          <td class="text-end fw-semibold" style="color:#16a34a;width:160px;">
+            {{ row.amount|floatformat:2 }}
+            {% if row.pct and income_rows|length > 1 %}<div class="text-muted" style="font-size:.72rem;font-weight:400;">{{ row.pct }}%</div>{% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" class="text-muted text-center py-3 fst-italic" style="font-size:.85rem;">No income recorded for this period.</td></tr>
+        {% endfor %}
+        <!-- Total Income -->
+        <tr style="background:#f0fdf4;border-top:1.5px solid #16a34a;">
+          <td colspan="2" class="fw-bold" style="color:#15803d;padding-left:1.25rem;">Total Income</td>
+          <td class="text-end fw-bold" style="color:#15803d;">{{ total_income|floatformat:2 }}</td>
+        </tr>
+      </tbody>
+
+      <!-- gap -->
+      <tbody><tr style="height:6px;background:#f8fafc;"><td colspan="3" style="padding:0;"></td></tr></tbody>
+
+      <!-- ── EXPENSES ── -->
+      <tbody>
+        <tr style="background:#fff1f2;">
+          <td colspan="2" style="color:#dc2626;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.6px;padding:.55rem 1rem;">
+            <i class="bi bi-arrow-up-circle-fill me-1"></i>Expenses
+          </td>
+          <td class="text-end" style="color:#dc2626;font-size:.78rem;font-weight:600;padding:.55rem 1rem;">Amount (KES)</td>
+        </tr>
+        {% for row in expense_rows %}
+        <tr>
+          <td class="text-muted" style="width:70px;padding-left:1.25rem;font-size:.82rem;">{{ row.account.code }}</td>
+          <td>
+            <span>{{ row.account.name }}</span>
+            {% if row.pct and expense_rows|length > 1 %}
+            <div style="height:3px;background:#e2e8f0;border-radius:99px;max-width:180px;margin-top:3px;">
+              <div style="height:3px;background:#dc2626;border-radius:99px;width:{{ row.pct }}%;"></div>
+            </div>
+            {% endif %}
+          </td>
+          <td class="text-end fw-semibold" style="color:#dc2626;width:160px;">
+            {{ row.amount|floatformat:2 }}
+            {% if row.pct and expense_rows|length > 1 %}<div class="text-muted" style="font-size:.72rem;font-weight:400;">{{ row.pct }}%</div>{% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" class="text-muted text-center py-3 fst-italic" style="font-size:.85rem;">No expenses recorded for this period.</td></tr>
+        {% endfor %}
+        <!-- Total Expenses -->
+        <tr style="background:#fff1f2;border-top:1.5px solid #dc2626;">
+          <td colspan="2" class="fw-bold" style="color:#dc2626;padding-left:1.25rem;">Total Expenses</td>
+          <td class="text-end fw-bold" style="color:#dc2626;">{{ total_expenses|floatformat:2 }}</td>
+        </tr>
+      </tbody>
+
+      <!-- ── NET PROFIT / LOSS ── -->
+      <tbody>
+        <tr style="background:{% if net_profit >= 0 %}#f0fdf4{% else %}#fff1f2{% endif %};border-top:2px solid {% if net_profit >= 0 %}#16a34a{% else %}#dc2626{% endif %};">
+          <td colspan="2" class="fw-bold" style="font-size:1rem;color:{% if net_profit >= 0 %}#15803d{% else %}#dc2626{% endif %};padding-left:1.25rem;padding-top:.75rem;padding-bottom:.75rem;">
+            <i class="bi bi-{% if net_profit >= 0 %}check-circle-fill{% else %}x-circle-fill{% endif %} me-2"></i>
+            Net {% if net_profit >= 0 %}Profit{% else %}Loss{% endif %}
+            {% if profit_margin %}
+            <span class="ms-2 px-2 py-0 rounded" style="background:{% if net_profit >= 0 %}#dcfce7{% else %}#fee2e2{% endif %};color:{% if net_profit >= 0 %}#15803d{% else %}#dc2626{% endif %};font-size:.72rem;">
+              {{ profit_margin }}% margin
+            </span>
+            {% endif %}
+          </td>
+          <td class="text-end fw-bold" style="font-size:1.1rem;color:{% if net_profit >= 0 %}#15803d{% else %}#dc2626{% endif %};padding-top:.75rem;padding-bottom:.75rem;">
+            {{ net_profit|floatformat:2 }}
+          </td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+
+  <div class="card-footer text-muted" style="font-size:.75rem;">
+    Generated: {% now "d M Y H:i" %}
+    {% if request.chama %}&nbsp;&middot;&nbsp; {{ request.chama.name }}{% endif %}
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+  .sidebar, .topbar, .card:first-child, .card-footer, .btn { display: none !important; }
+  .main-content { margin-left: 0 !important; }
+  .card { box-shadow: none !important; }
+}
+</style>
+{% endblock %}

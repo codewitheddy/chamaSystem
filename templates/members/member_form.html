@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block title %}{% if object %}Edit{% else %}Add{% endif %} Member{% endblock %}
+{% block page_title %}{% if object %}Edit Member{% else %}Add Member{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Basic Info -->
+            <div class="card mb-3">
+                <div class="card-header fw-semibold"><i class="bi bi-person me-2"></i>Basic Information</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">{{ form.name.label }}</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">{{ form.phone.label }} <span class="text-danger">*</span></label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}<div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">{{ form.id_number.label }} <span class="text-danger">*</span></label>
+                            {{ form.id_number }}
+                            {% if form.id_number.errors %}<div class="text-danger small mt-1">{{ form.id_number.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">{{ form.email.label }}</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">{{ form.date_joined.label }}</label>
+                            {{ form.date_joined }}
+                            {% if form.date_joined.errors %}<div class="text-danger small mt-1">{{ form.date_joined.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">{{ form.registration_fee.label }}</label>
+                            {{ form.registration_fee }}
+                            {% if form.registration_fee.errors %}<div class="text-danger small mt-1">{{ form.registration_fee.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">{{ form.reg_payment_mode.label }}</label>
+                            {{ form.reg_payment_mode }}
+                            {% if form.reg_payment_mode.errors %}<div class="text-danger small mt-1">{{ form.reg_payment_mode.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">{{ form.reg_payment_reference.label }}</label>
+                            {{ form.reg_payment_reference }}
+                            {% if form.reg_payment_reference.errors %}<div class="text-danger small mt-1">{{ form.reg_payment_reference.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Member KYC Documents (member only) -->
+            <div class="card mb-3">
+                <div class="card-header fw-semibold">
+                    <i class="bi bi-card-image me-2"></i>Member KYC Documents
+                    <span class="text-muted fw-normal small ms-1">— passport photo & national ID</span>
+                    <span class="badge bg-light text-secondary ms-2 fw-normal" style="font-size:.7rem;">Member only</span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small">Passport / Profile Photo</label>
+                            {{ form.profile_photo }}
+                            {% if object and object.profile_photo %}
+                            <div class="mt-2">
+                                <img src="{{ object.profile_photo.url }}" alt="Profile" class="img-thumbnail" style="max-height:80px;">
+                            </div>
+                            {% endif %}
+                            {% if form.profile_photo.errors %}<div class="text-danger small mt-1">{{ form.profile_photo.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small">National ID — Front</label>
+                            {{ form.id_front }}
+                            {% if object and object.id_front %}
+                            <div class="mt-2">
+                                <img src="{{ object.id_front.url }}" alt="ID Front" class="img-thumbnail" style="max-height:80px;">
+                            </div>
+                            {% endif %}
+                            {% if form.id_front.errors %}<div class="text-danger small mt-1">{{ form.id_front.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small">National ID — Back</label>
+                            {{ form.id_back }}
+                            {% if object and object.id_back %}
+                            <div class="mt-2">
+                                <img src="{{ object.id_back.url }}" alt="ID Back" class="img-thumbnail" style="max-height:80px;">
+                            </div>
+                            {% endif %}
+                            {% if form.id_back.errors %}<div class="text-danger small mt-1">{{ form.id_back.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Next of Kin (text only — no photo uploads) -->
+            <div class="card mb-3">
+                <div class="card-header fw-semibold">
+                    <i class="bi bi-people me-2"></i>Next of Kin / Beneficiary
+                    <span class="text-muted fw-normal small ms-1">— contact details only</span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small">Full Name</label>
+                            {{ form.next_of_kin_name }}
+                            {% if form.next_of_kin_name.errors %}<div class="text-danger small mt-1">{{ form.next_of_kin_name.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small">Phone Number</label>
+                            {{ form.next_of_kin_phone }}
+                            {% if form.next_of_kin_phone.errors %}<div class="text-danger small mt-1">{{ form.next_of_kin_phone.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small">Relationship</label>
+                            {{ form.next_of_kin_relation }}
+                            {% if form.next_of_kin_relation.errors %}<div class="text-danger small mt-1">{{ form.next_of_kin_relation.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Save Member</button>
+                <a href="{% url 'members:list' %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

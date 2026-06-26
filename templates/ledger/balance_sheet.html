@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Balance Sheet{% endblock %}
+{% block page_title %}Balance Sheet{% endblock %}
+
+{% block content %}
+<form method="get" class="d-flex gap-2 align-items-end mb-4">
+    <div>
+        <label class="form-label small fw-semibold mb-1">As at</label>
+        <input type="date" name="as_at" class="form-control form-control-sm" value="{{ as_at }}">
+    </div>
+    <button type="submit" class="btn btn-sm btn-primary">Apply</button>
+    <span class="text-muted small align-self-center">As at {{ as_at }}</span>
+</form>
+
+{% if not balanced %}
+<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>Balance sheet does not balance. Assets ≠ Liabilities + Equity.</div>
+{% endif %}
+
+<div class="row g-3">
+    <!-- Assets -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header text-primary"><i class="bi bi-box me-2"></i>Assets</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Account</th><th class="text-end">Amount</th></tr></thead>
+                    <tbody>
+                    {% for row in asset_rows %}
+                    <tr><td>{{ row.account.code }} — {{ row.account.name }}</td><td class="text-end fw-semibold">KES {{ row.amount|floatformat:2 }}</td></tr>
+                    {% empty %}<tr><td colspan="2" class="text-muted text-center py-3">No assets.</td></tr>{% endfor %}
+                    </tbody>
+                    <tfoot class="table-light"><tr><td class="fw-bold">Total Assets</td><td class="text-end fw-bold text-primary">KES {{ total_assets|floatformat:2 }}</td></tr></tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liabilities + Equity -->
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header text-danger"><i class="bi bi-exclamation-circle me-2"></i>Liabilities</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Account</th><th class="text-end">Amount</th></tr></thead>
+                    <tbody>
+                    {% for row in liability_rows %}
+                    <tr><td>{{ row.account.code }} — {{ row.account.name }}</td><td class="text-end fw-semibold">KES {{ row.amount|floatformat:2 }}</td></tr>
+                    {% empty %}<tr><td colspan="2" class="text-muted text-center py-3">No liabilities.</td></tr>{% endfor %}
+                    </tbody>
+                    <tfoot class="table-light"><tr><td class="fw-bold">Total Liabilities</td><td class="text-end fw-bold text-danger">KES {{ total_liabilities|floatformat:2 }}</td></tr></tfoot>
+                </table>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header text-success"><i class="bi bi-people me-2"></i>Equity</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Account</th><th class="text-end">Amount</th></tr></thead>
+                    <tbody>
+                    {% for row in equity_rows %}
+                    <tr><td>{{ row.account.code }} — {{ row.account.name }}</td><td class="text-end fw-semibold">KES {{ row.amount|floatformat:2 }}</td></tr>
+                    {% endfor %}
+                    <tr><td>Net Profit (Current Period)</td><td class="text-end fw-semibold {% if net_profit >= 0 %}text-success{% else %}text-danger{% endif %}">KES {{ net_profit|floatformat:2 }}</td></tr>
+                    </tbody>
+                    <tfoot class="table-light"><tr><td class="fw-bold">Total Equity</td><td class="text-end fw-bold text-success">KES {{ total_equity|floatformat:2 }}</td></tr></tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-6 text-end"><span class="fw-bold fs-5">Total Assets</span></div>
+            <div class="col-6"><span class="fw-bold fs-5 text-primary">KES {{ total_assets|floatformat:2 }}</span></div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-6 text-end"><span class="fw-bold fs-5">Total Liabilities + Equity</span></div>
+            <div class="col-6"><span class="fw-bold fs-5 {% if balanced %}text-success{% else %}text-danger{% endif %}">KES {{ total_l_e|floatformat:2 }}</span></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

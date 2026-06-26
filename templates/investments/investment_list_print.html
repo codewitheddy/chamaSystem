@@ -1,0 +1,38 @@
+{% extends "includes/print_base.html" %}
+{% block print_title %}Investment Portfolio{% endblock %}
+{% block print_heading %}Investment Portfolio{% endblock %}
+{% block print_meta %}
+  Total Invested: KES {{ total_invested|floatformat:2 }} &nbsp;|&nbsp;
+  Portfolio Value: KES {{ total_current|floatformat:2 }} &nbsp;|&nbsp; {% now "d M Y" %}
+{% endblock %}
+{% block print_body %}
+<table>
+  <thead>
+    <tr><th>#</th><th>Name</th><th>Type</th><th>Invested</th><th>Current Value</th><th>Returns</th><th>ROI %</th><th>Date</th><th>Status</th></tr>
+  </thead>
+  <tbody>
+  {% for inv in investments %}
+  <tr>
+    <td>{{ forloop.counter }}</td>
+    <td><strong>{{ inv.name }}</strong>{% if inv.location %}<br><small>{{ inv.location }}</small>{% endif %}</td>
+    <td>{{ inv.get_investment_type_display }}</td>
+    <td>KES {{ inv.amount_invested|floatformat:2 }}</td>
+    <td>{% if inv.current_value %}KES {{ inv.current_value|floatformat:2 }}{% else %}—{% endif %}</td>
+    <td>KES {{ inv.total_returns|floatformat:2 }}</td>
+    <td>{{ inv.roi_percent }}%</td>
+    <td>{{ inv.date_invested }}</td>
+    <td>{{ inv.get_status_display }}</td>
+  </tr>
+  {% empty %}<tr><td colspan="9">No investments found.</td></tr>
+  {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr>
+      <td colspan="3">Totals</td>
+      <td>KES {{ total_invested|floatformat:2 }}</td>
+      <td>KES {{ total_current|floatformat:2 }}</td>
+      <td colspan="4"></td>
+    </tr>
+  </tfoot>
+</table>
+{% endblock %}

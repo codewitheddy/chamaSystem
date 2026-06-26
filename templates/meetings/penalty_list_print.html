@@ -1,0 +1,28 @@
+{% extends "includes/print_base.html" %}
+{% block print_title %}Penalties{% endblock %}
+{% block print_heading %}Meeting Penalties Report{% endblock %}
+{% block print_meta %}Total: {{ penalties|length }} &nbsp;|&nbsp; {% now "d M Y" %}{% endblock %}
+{% block print_body %}
+<table>
+  <thead>
+    <tr><th>#</th><th>Member</th><th>Meeting</th><th>Date</th><th>Reason</th><th>Amount</th><th>Status</th></tr>
+  </thead>
+  <tbody>
+  {% for p in penalties %}
+  <tr>
+    <td>{{ forloop.counter }}</td>
+    <td><strong>{{ p.member.name }}</strong></td>
+    <td>{{ p.meeting.title }}</td>
+    <td>{{ p.meeting.date }}</td>
+    <td>{{ p.get_reason_display }}</td>
+    <td>KES {{ p.amount|floatformat:2 }}</td>
+    <td>{% if p.paid %}<span class="badge-green">Paid</span>{% else %}<span class="badge-red">Unpaid</span>{% endif %}</td>
+  </tr>
+  {% empty %}<tr><td colspan="7">No penalties found.</td></tr>
+  {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr><td colspan="5">Total</td><td>KES {{ total_amount|floatformat:2 }}</td><td></td></tr>
+  </tfoot>
+</table>
+{% endblock %}

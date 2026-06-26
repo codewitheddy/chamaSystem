@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% block title %}Emergency Loans{% endblock %}
+{% block page_title %}Emergency Loans{% endblock %}
+
+{% block content %}
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-rose"><i class="bi bi-lightning"></i></div>
+                <div>
+                    <div class="stat-label">Total Issued</div>
+                    <div class="stat-value">KES {{ total_issued|floatformat:0 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-amber"><i class="bi bi-hourglass-split"></i></div>
+                <div>
+                    <div class="stat-label">Active</div>
+                    <div class="stat-value">{{ active_count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-green"><i class="bi bi-check-circle"></i></div>
+                <div>
+                    <div class="stat-label">Cleared</div>
+                    <div class="stat-value">{{ cleared_count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-rose"><i class="bi bi-exclamation-circle"></i></div>
+                <div>
+                    <div class="stat-label">Outstanding</div>
+                    <div class="stat-value">KES {{ total_balance|floatformat:0 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toolbar -->
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+        <form class="d-flex gap-2" method="get">
+            {% if current_status %}<input type="hidden" name="status" value="{{ current_status }}">{% endif %}
+            <input type="text" name="q" value="{{ q }}" class="form-control form-control-sm"
+                   placeholder="Search member..." style="width:200px;">
+            <button class="btn btn-sm btn-outline-secondary">Search</button>
+            {% if q %}<a href="?{% if current_status %}status={{ current_status }}{% endif %}" class="btn btn-sm btn-outline-danger">Clear</a>{% endif %}
+        </form>
+        <a href="{% url 'loans:emergency_list' %}" class="btn btn-sm {% if not current_status %}btn-primary{% else %}btn-outline-secondary{% endif %}">All</a>
+        <a href="?status=active" class="btn btn-sm {% if current_status == 'active' %}btn-warning{% else %}btn-outline-secondary{% endif %}">Active</a>
+        <a href="?status=cleared" class="btn btn-sm {% if current_status == 'cleared' %}btn-success{% else %}btn-outline-secondary{% endif %}">Cleared</a>
+        <a href="?status=late" class="btn btn-sm {% if current_status == 'late' %}btn-danger{% else %}btn-outline-secondary{% endif %}">Late</a>
+    </div>
+    <a href="{% url 'loans:emergency_add' %}" class="btn btn-danger btn-sm">
+        <i class="bi bi-lightning me-1"></i>Issue Emergency Loan
+    </a>
+</div>
+
+<!-- Table -->
+<div class="card">
+    <div class="card-header"><i class="bi bi-lightning me-2"></i>Emergency Loans — Due within 7 days, no interest</div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Member</th>
+                    <th>Amount</th>
+                    <th>Date Issued</th>
+                    <th>Due Date</th>
+                    <th>Paid</th>
+                    <th>Balance</th>
+                    <th>Progress</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in loans %}
+                <tr>
+                    <td class="text-muted" style="font-size:0.8rem;">#{{ l.pk }}</td>
+                    <td class="fw-semibold">{{ l.member.name }}</td>
+                    <td>KES {{ l.loan_amount|floatformat:2 }}</td>
+                    <td>{{ l.date_taken }}</td>
+                    <td>
+                        <span class="{% if l.status == 'late' %}text-danger fw-semibold{% endif %}">
+                            {{ l.due_date|default:"—" }}
+                        </span>
+                    </td>
+                    <td style="color:#2563eb;">KES {{ l.amount_paid|floatformat:2 }}</td>
+                    <td class="fw-semibold {% if l.balance == 0 %}text-success{% else %}text-danger{% endif %}">
+                        KES {{ l.balance|floatformat:2 }}
+                    </td>
+                    <td style="min-width:100px;">
+                        <div class="progress mb-1" style="height:6px;">
+                            <div class="progress-bar {% if l.status == 'cleared' %}bg-success{% elif l.status == 'late' %}bg-danger{% else %}bg-primary{% endif %}"
+                                 style="width:{{ l.repayment_percent }}%;"></div>
+                        </div>
+                        <span style="font-size:0.72rem;color:#64748b;">{{ l.repayment_percent }}%</span>
+                    </td>
+                    <td>
+                        {% if l.status == 'cleared' %}
+                            <span class="badge" style="background:#f0fdf4;color:#16a34a;">Cleared</span>
+                        {% elif l.status == 'late' %}
+                            <span class="badge" style="background:#fff1f2;color:#e11d48;">Late</span>
+                        {% else %}
+                            <span class="badge" style="background:#fffbeb;color:#d97706;">Active</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="{% url 'loans:detail' l.pk %}" class="btn btn-sm btn-outline-secondary" title="View">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            {% if l.status != 'cleared' %}
+                            <a href="{% url 'payments:add' %}?loan={{ l.pk }}" class="btn btn-sm btn-success" title="Pay">
+                                <i class="bi bi-cash"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" class="text-center text-muted py-5">
+                        <i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:0.5rem;"></i>
+                        No emergency loans found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-white border-top">
+        {% include 'includes/pagination.html' %}
+    </div>
+</div>
+
+{% endblock %}

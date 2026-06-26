@@ -1,0 +1,102 @@
+{% extends "includes/print_base.html" %}
+{% block print_title %}{{ agm.title }}{% endblock %}
+{% block print_heading %}{{ agm.title }}{% endblock %}
+{% block print_meta %}
+  Date: {{ agm.date }}{% if agm.time %} at {{ agm.time|time:"H:i" }}{% endif %}
+  {% if agm.venue %} &nbsp;|&nbsp; Venue: {{ agm.venue }}{% endif %}
+  &nbsp;|&nbsp; Status: {{ agm.get_status_display }}
+  &nbsp;|&nbsp; Attendance: {{ agm.attendance_count }}/{{ agm.total_members }}
+  &nbsp;|&nbsp; {% now "d M Y H:i" %}
+{% endblock %}
+
+{% block print_body %}
+
+{% if agm.notice %}
+<h3 style="font-size:13px;margin:12px 0 4px;border-bottom:1px solid #e2e8f0;padding-bottom:4px;">Official Notice</h3>
+<p style="font-size:11px;white-space:pre-wrap;">{{ agm.notice }}</p>
+{% endif %}
+
+<!-- Agenda -->
+<h3 style="font-size:13px;margin:16px 0 4px;border-bottom:1px solid #e2e8f0;padding-bottom:4px;">Agenda</h3>
+<table>
+  <thead><tr><th>#</th><th>Type</th><th>Item</th><th>Presenter</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for item in agenda_items %}
+  <tr>
+    <td>{{ item.order }}</td>
+    <td>{{ item.get_item_type_display }}</td>
+    <td><strong>{{ item.title }}</strong>{% if item.description %}<br><small>{{ item.description }}</small>{% endif %}
+        {% if item.notes %}<br><em style="color:#64748b;">{{ item.notes }}</em>{% endif %}
+    </td>
+    <td>{{ item.presenter|default:"—" }}</td>
+    <td>{% if item.is_done %}<span class="badge-green">Done</span>{% else %}—{% endif %}</td>
+  </tr>
+  {% empty %}<tr><td colspan="5">No agenda items.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<!-- Resolutions -->
+<h3 style="font-size:13px;margin:16px 0 4px;border-bottom:1px solid #e2e8f0;padding-bottom:4px;">Resolutions</h3>
+<table>
+  <thead><tr><th>Resolution</th><th>Motion</th><th>Yes</th><th>No</th><th>Abstain</th><th>Result</th></tr></thead>
+  <tbody>
+  {% for res in resolutions %}
+  <tr>
+    <td><strong>{{ res.title }}</strong>
+        {% if res.proposed_by %}<br><small>Proposed: {{ res.proposed_by.name }}</small>{% endif %}
+    </td>
+    <td style="font-size:10px;font-style:italic;">{{ res.motion_text }}</td>
+    <td style="color:#16a34a;font-weight:bold;">{{ res.votes_yes }}</td>
+    <td style="color:#e11d48;font-weight:bold;">{{ res.votes_no }}</td>
+    <td>{{ res.votes_abstain }}</td>
+    <td>
+      {% if res.status == 'passed' %}<span class="badge-green">Passed</span>
+      {% elif res.status == 'failed' %}<span class="badge-red">Failed</span>
+      {% elif res.status == 'withdrawn' %}<span class="badge-gray">Withdrawn</span>
+      {% else %}{{ res.get_status_display }}{% endif %}
+    </td>
+  </tr>
+  {% empty %}<tr><td colspan="6">No resolutions.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<!-- Attendance -->
+<h3 style="font-size:13px;margin:16px 0 4px;border-bottom:1px solid #e2e8f0;padding-bottom:4px;">
+  Attendance Register ({{ agm.attendance_count }} present)
+</h3>
+<table>
+  <thead><tr><th>#</th><th>Member</th><th>Status</th><th>Proxy / Representative</th><th>Signature</th></tr></thead>
+  <tbody>
+  {% for att in attendances %}
+  <tr>
+    <td>{{ forloop.counter }}</td>
+    <td>{{ att.member.name }}</td>
+    <td>{% if att.present %}<span class="badge-green">Present</span>{% else %}<span class="badge-gray">Absent</span>{% endif %}</td>
+    <td>{{ att.represented_by|default:"—" }}</td>
+    <td style="border-bottom:1px solid #ccc;min-width:100px;">&nbsp;</td>
+  </tr>
+  {% empty %}<tr><td colspan="5">No attendance recorded.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% if agm.minutes %}
+<h3 style="font-size:13px;margin:16px 0 4px;border-bottom:1px solid #e2e8f0;padding-bottom:4px;">Minutes</h3>
+<p style="font-size:11px;white-space:pre-wrap;">{{ agm.minutes }}</p>
+{% endif %}
+
+<!-- Signature block -->
+<div style="margin-top:32px;display:flex;gap:64px;">
+  <div>
+    <div style="border-top:1px solid #1e293b;width:200px;padding-top:4px;font-size:11px;">Chairperson</div>
+  </div>
+  <div>
+    <div style="border-top:1px solid #1e293b;width:200px;padding-top:4px;font-size:11px;">Secretary</div>
+  </div>
+  <div>
+    <div style="border-top:1px solid #1e293b;width:200px;padding-top:4px;font-size:11px;">Treasurer</div>
+  </div>
+</div>
+{% endblock %}

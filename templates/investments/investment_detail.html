@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}{{ inv.name }}{% endblock %}
+{% block page_title %}{{ inv.name }}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <!-- Summary -->
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Investment Details</span>
+                {% if inv.status == 'active' %}<span class="badge bg-success">Active</span>
+                {% elif inv.status == 'exited' %}<span class="badge bg-secondary">Exited</span>
+                {% else %}<span class="badge bg-danger">Written Off</span>{% endif %}
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr><td class="text-muted ps-3">Type</td><td class="pe-3">{{ inv.get_investment_type_display }}</td></tr>
+                    <tr><td class="text-muted ps-3">Amount Invested</td><td class="fw-bold pe-3">KES {{ inv.amount_invested|floatformat:2 }}</td></tr>
+                    <tr><td class="text-muted ps-3">Date Invested</td><td class="pe-3">{{ inv.date_invested }}</td></tr>
+                    {% if inv.location %}<tr><td class="text-muted ps-3">Location</td><td class="pe-3">{{ inv.location }}</td></tr>{% endif %}
+                    {% if inv.current_value %}
+                    <tr><td class="text-muted ps-3">Current Value</td><td class="pe-3" style="color:#7c3aed;">KES {{ inv.current_value|floatformat:2 }}</td></tr>
+                    <tr><td class="text-muted ps-3">Valuation Date</td><td class="pe-3 text-muted small">{{ inv.valuation_date }}</td></tr>
+                    {% endif %}
+                    <tr><td class="text-muted ps-3">Total Returns</td><td class="pe-3" style="color:#16a34a;">KES {{ inv.total_returns|floatformat:2 }}</td></tr>
+                    <tr><td class="text-muted ps-3">Net Gain</td>
+                        <td class="pe-3 fw-semibold {% if inv.net_gain >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            KES {{ inv.net_gain|floatformat:2 }}
+                        </td>
+                    </tr>
+                    <tr><td class="text-muted ps-3">ROI</td>
+                        <td class="pe-3 fw-bold {% if inv.roi_percent >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ inv.roi_percent }}%
+                        </td>
+                    </tr>
+                    {% if inv.exit_amount %}
+                    <tr><td class="text-muted ps-3">Exit Amount</td><td class="pe-3">KES {{ inv.exit_amount|floatformat:2 }}</td></tr>
+                    <tr><td class="text-muted ps-3">Exit Date</td><td class="pe-3">{{ inv.exit_date }}</td></tr>
+                    {% endif %}
+                </table>
+            </div>
+            {% if inv.description %}
+            <div class="card-footer text-muted small">{{ inv.description }}</div>
+            {% endif %}
+        </div>
+
+        {% if inv.notes %}
+        <div class="card mb-3">
+            <div class="card-header">Notes</div>
+            <div class="card-body small">{{ inv.notes }}</div>
+        </div>
+        {% endif %}
+
+        {% if user.profile.is_treasurer %}
+        <a href="{% url 'investments:edit' inv.pk %}" class="btn btn-outline-warning btn-sm me-2">
+            <i class="bi bi-pencil me-1"></i>Edit
+        </a>
+        {% endif %}
+        <a href="{% url 'investments:list' %}" class="btn btn-outline-secondary btn-sm">← Back</a>
+    </div>
+
+    <div class="col-md-8">
+        <!-- Add Transaction -->
+        {% if user.profile.is_treasurer and inv.status == 'active' %}
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-plus-circle me-2"></i>Record Transaction</div>
+            <div class="card-body">
+                <form method="post" action="{% url 'investments:tx_add' inv.pk %}">
+                    {% csrf_token %}
+                    <div class="row g-2">
+                        <div class="col-sm-3">
+                            <label class="form-label small fw-semibold">Type</label>
+                            {{ tx_form.tx_type }}
+                        </div>
+                        <div class="col-sm-2">
+                            <label class="form-label small fw-semibold">Amount (KES)</label>
+                            {{ tx_form.amount }}
+                        </div>
+                        <div class="col-sm-2">
+                            <label class="form-label small fw-semibold">Date</label>
+                            {{ tx_form.date }}
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="form-label small fw-semibold">Description</label>
+                            {{ tx_form.description }}
+                        </div>
+                        <div class="col-sm-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary btn-sm w-100">Save</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Transaction History -->
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-clock-history me-2"></i>Transaction History</div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Description</th><th>Reference</th>{% if user.profile.is_admin %}<th></th>{% endif %}</tr></thead>
+                    <tbody>
+                    {% for tx in transactions %}
+                    <tr>
+                        <td>{{ tx.date }}</td>
+                        <td>
+                            {% if tx.tx_type == 'injection' %}<span class="badge bg-warning text-dark">Injection</span>
+                            {% elif tx.tx_type == 'income' %}<span class="badge bg-success">Income</span>
+                            {% elif tx.tx_type == 'dividend' %}<span class="badge bg-info text-dark">Dividend</span>
+                            {% elif tx.tx_type == 'exit' %}<span class="badge bg-secondary">Exit</span>
+                            {% else %}<span class="badge bg-danger">Expense</span>{% endif %}
+                        </td>
+                        <td class="fw-semibold {% if tx.tx_type in 'income,dividend,exit' %}text-success{% elif tx.tx_type == 'expense' %}text-danger{% endif %}">
+                            KES {{ tx.amount|floatformat:2 }}
+                        </td>
+                        <td class="text-muted small">{{ tx.description|default:"—" }}</td>
+                        <td class="text-muted small">{{ tx.reference|default:"—" }}</td>
+                        {% if user.profile.is_admin %}
+                        <td>
+                            <form method="post" action="{% url 'investments:tx_delete' tx.pk %}"
+                                  onsubmit="return confirm('Delete this transaction?')">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted py-3">No transactions yet.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Documents -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-file-earmark me-2"></i>Documents</span>
+            </div>
+            {% if user.profile.is_treasurer %}
+            <div class="card-body border-bottom">
+                <form method="post" action="{% url 'investments:doc_upload' inv.pk %}" enctype="multipart/form-data" class="row g-2 align-items-end">
+                    {% csrf_token %}
+                    <div class="col-sm-5">
+                        <label class="form-label small fw-semibold">Title</label>
+                        {{ doc_form.title }}
+                    </div>
+                    <div class="col-sm-5">
+                        <label class="form-label small fw-semibold">File</label>
+                        {{ doc_form.file }}
+                    </div>
+                    <div class="col-sm-2">
+                        <button type="submit" class="btn btn-outline-primary btn-sm w-100">Upload</button>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Title</th><th>Uploaded</th><th></th></tr></thead>
+                    <tbody>
+                    {% for doc in documents %}
+                    <tr>
+                        <td><a href="{{ doc.file.url }}" target="_blank" class="text-decoration-none"><i class="bi bi-file-earmark me-1"></i>{{ doc.title }}</a></td>
+                        <td class="text-muted small">{{ doc.uploaded_at|date:"d M Y" }}</td>
+                        <td>
+                            {% if user.profile.is_admin %}
+                            <form method="post" action="{% url 'investments:doc_delete' doc.pk %}"
+                                  onsubmit="return confirm('Delete this document?')">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="text-center text-muted py-3">No documents uploaded.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

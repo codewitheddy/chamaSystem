@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block title %}{{ post.title }}{% endblock %}
+{% block page_title %}Message Board{% endblock %}
+
+{% block extra_css %}
+<style>
+.avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.88rem;flex-shrink:0;}
+.comment-card{background:#f8fafc;border-radius:8px;padding:.75rem 1rem;margin-bottom:.65rem;border:1px solid #f1f5f9;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-8">
+
+    <!-- Post -->
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex gap-3">
+          <div class="avatar" style="background:{% if post.category == 'announcement' %}#fffbeb;color:#d97706{% else %}#eff6ff;color:#2563eb{% endif %}">
+            {{ post.author_display|first|upper }}
+          </div>
+          <div class="flex-grow-1">
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+              {% if post.is_pinned %}<i class="bi bi-pin-angle-fill text-primary"></i>{% endif %}
+              {% if post.category == 'announcement' %}
+              <span class="badge" style="background:#fffbeb;color:#d97706;border:1px solid #fde68a;">Announcement</span>
+              {% endif %}
+              <h5 class="mb-0 fw-bold">{{ post.title }}</h5>
+              {% if post.is_closed %}<span class="badge bg-secondary">Closed</span>{% endif %}
+            </div>
+            <div class="text-muted small mb-3">
+              <i class="bi bi-person me-1"></i><strong>{{ post.author_display }}</strong>
+              &nbsp;&middot;&nbsp;<i class="bi bi-clock me-1"></i>{{ post.created_at|date:"d M Y H:i" }}
+            </div>
+            <div style="white-space:pre-wrap;line-height:1.75;">{{ post.body }}</div>
+            {% if post.attachment %}
+            <div class="mt-3">
+              <a href="{{ post.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-paperclip me-1"></i>View Attachment
+              </a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="card-footer d-flex align-items-center gap-2 flex-wrap">
+        <!-- Like -->
+        <button class="btn btn-sm {% if liked %}btn-primary{% else %}btn-outline-secondary{% endif %} like-btn"
+                data-url="{% url 'board:post_react' post.pk %}">
+          <i class="bi bi-hand-thumbs-up me-1"></i>
+          <span class="like-count">{{ post.reaction_count }}</span>
+        </button>
+        <span class="text-muted small"><i class="bi bi-chat me-1"></i>{{ post.comment_count }} comment{{ post.comment_count|pluralize }}</span>
+
+        <!-- Admin/author actions -->
+        <div class="ms-auto d-flex gap-1 flex-wrap">
+          {% if user == post.author or user.profile.is_admin %}
+          <a href="{% url 'board:post_edit' post.pk %}" class="btn btn-sm btn-outline-warning" title="Edit">
+            <i class="bi bi-pencil"></i>
+          </a>
+          <form method="post" action="{% url 'board:post_delete' post.pk %}" onsubmit="return confirm('Delete this post?')">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+          </form>
+          {% endif %}
+          {% if user.profile.is_treasurer %}
+          <form method="post" action="{% url 'board:post_pin' post.pk %}">
+            {% csrf_token %}
+            <button class="btn btn-sm {% if post.is_pinned %}btn-primary{% else %}btn-outline-secondary{% endif %}" title="{% if post.is_pinned %}Unpin{% else %}Pin{% endif %}">
+              <i class="bi bi-pin-angle{% if post.is_pinned %}-fill{% endif %}"></i>
+            </button>
+          </form>
+          <form method="post" action="{% url 'board:post_close' post.pk %}">
+            {% csrf_token %}
+            <button class="btn btn-sm {% if post.is_closed %}btn-secondary{% else %}btn-outline-secondary{% endif %}" title="{% if post.is_closed %}Reopen{% else %}Close{% endif %}">
+              <i class="bi bi-{% if post.is_closed %}unlock{% else %}lock{% endif %}"></i>
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Comments -->
+    <h6 class="fw-semibold mb-3">{{ post.comment_count }} Comment{{ post.comment_count|pluralize }}</h6>
+
+    {% for comment in comments %}
+    <div class="comment-card">
+      <div class="d-flex gap-2 align-items-start">
+        <div class="avatar" style="background:#f1f5f9;color:#475569;width:32px;height:32px;font-size:.75rem;flex-shrink:0;">
+          {{ comment.author_display|first|upper }}
+        </div>
+        <div class="flex-grow-1">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="fw-semibold small">{{ comment.author_display }}</span>
+            <span class="text-muted" style="font-size:.75rem;">{{ comment.created_at|timesince }} ago</span>
+          </div>
+          <div style="font-size:.875rem;white-space:pre-wrap;line-height:1.65;">{{ comment.body }}</div>
+        </div>
+        {% if user == comment.author or user.profile.is_admin %}
+        <form method="post" action="{% url 'board:comment_delete' comment.pk %}" onsubmit="return confirm('Delete this comment?')">
+          {% csrf_token %}
+          <button class="btn btn-sm btn-outline-danger" style="padding:2px 7px;" title="Delete"><i class="bi bi-trash" style="font-size:.7rem;"></i></button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <p class="text-muted small">No comments yet. Be the first to reply.</p>
+    {% endfor %}
+
+    <!-- Comment form -->
+    {% if not post.is_closed %}
+    <div class="card mt-3">
+      <div class="card-header fw-semibold small"><i class="bi bi-reply me-2"></i>Write a Reply</div>
+      <div class="card-body">
+        <form method="post" action="{% url 'board:post_detail' post.pk %}">
+          {% csrf_token %}
+          {{ comment_form.body }}
+          {% if comment_form.body.errors %}
+          <div class="text-danger small mt-1">{{ comment_form.body.errors }}</div>
+          {% endif %}
+          <button type="submit" class="btn btn-primary btn-sm mt-2">
+            <i class="bi bi-reply me-1"></i>Post Reply
+          </button>
+        </form>
+      </div>
+    </div>
+    {% else %}
+    <div class="alert alert-secondary mt-3 py-2 small">
+      <i class="bi bi-lock me-1"></i>This post is closed for new comments.
+    </div>
+    {% endif %}
+
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-body">
+        <a href="{% url 'board:board' %}" class="btn btn-outline-secondary btn-sm w-100">
+          <i class="bi bi-arrow-left me-1"></i>Back to Board
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.like-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    fetch(this.dataset.url, {
+      method: 'POST',
+      headers: {'X-CSRFToken': '{{ csrf_token }}'},
+    })
+    .then(r => r.json())
+    .then(data => {
+      this.querySelector('.like-count').textContent = data.count;
+      this.classList.toggle('btn-primary', data.liked);
+      this.classList.toggle('btn-outline-secondary', !data.liked);
+    });
+  });
+});
+</script>
+{% endblock %}

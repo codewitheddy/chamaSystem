@@ -1,0 +1,30 @@
+{% extends "includes/print_base.html" %}
+{% block print_title %}Contributions{% endblock %}
+{% block print_heading %}Contributions Report{% endblock %}
+{% block print_meta %}
+  Total records: {{ contributions|length }} &nbsp;|&nbsp; {% now "d M Y" %}
+{% endblock %}
+{% block print_body %}
+<table>
+  <thead>
+    <tr><th>#</th><th>Member</th><th>Amount</th><th>Month</th><th>Year</th><th>Date</th><th>Status</th></tr>
+  </thead>
+  <tbody>
+  {% for c in contributions %}
+  <tr>
+    <td>{{ forloop.counter }}</td>
+    <td><strong>{{ c.member.name }}</strong></td>
+    <td>KES {{ c.amount|floatformat:2 }}</td>
+    <td>{{ c.get_month_display }}</td>
+    <td>{{ c.year }}</td>
+    <td>{{ c.date }}</td>
+    <td>{% if c.is_voided %}<span class="badge-gray">Voided</span>{% else %}<span class="badge-green">Valid</span>{% endif %}</td>
+  </tr>
+  {% empty %}<tr><td colspan="7">No contributions found.</td></tr>
+  {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr><td colspan="2">Total</td><td>KES {{ total|floatformat:2 }}</td><td colspan="4"></td></tr>
+  </tfoot>
+</table>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Year-End Payouts{% endblock %}
+{% block page_title %}Year-End Dividend Payouts{% endblock %}
+
+{% block content %}
+
+<!-- Fund availability -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="icon-box accent-green"><i class="bi bi-wallet2"></i></div>
+        <div>
+          <div class="stat-label">Cash Balance</div>
+          <div class="stat-value text-success">KES {{ fund.cash_balance|floatformat:2 }}</div>
+          <div style="font-size:.72rem;color:#94a3b8;">total in fund</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="icon-box accent-amber"><i class="bi bi-credit-card"></i></div>
+        <div>
+          <div class="stat-label">Active Loan Balance</div>
+          <div class="stat-value text-warning">KES {{ fund.active_loan_balance|floatformat:2 }}</div>
+          <div style="font-size:.72rem;color:#94a3b8;">outstanding loans</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="icon-box accent-blue"><i class="bi bi-cash-stack"></i></div>
+        <div>
+          <div class="stat-label">Available for Loans</div>
+          <div class="stat-value text-primary">KES {{ fund.available_for_new_loans|floatformat:2 }}</div>
+          <div style="font-size:.72rem;color:#94a3b8;">can be disbursed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="icon-box accent-teal"><i class="bi bi-arrow-down-circle"></i></div>
+        <div>
+          <div class="stat-label">Total Contributions</div>
+          <div class="stat-value">KES {{ fund.total_contributions|floatformat:2 }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Year-end payouts -->
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-calendar-check me-2"></i>Year-End Payouts</span>
+    {% if user.profile.is_admin %}
+    <a href="{% url 'accounting:year_end_create' %}" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus me-1"></i>New Year-End Payout
+    </a>
+    {% endif %}
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr><th>Year</th><th>Date</th><th>Members</th><th class="text-end">Total Distributed</th><th>Paid</th><th></th></tr>
+      </thead>
+      <tbody>
+      {% for p in payouts %}
+      <tr>
+        <td class="fw-semibold">{{ p.year }}</td>
+        <td>{{ p.payout_date }}</td>
+        <td>{{ p.lines.count }}</td>
+        <td class="text-end text-success fw-semibold">KES {{ p.total_distributed|floatformat:2 }}</td>
+        <td>
+          {% with paid=p.lines.filter.is_paid %}
+          {{ p.lines.filter.count }} / {{ p.lines.count }}
+          {% endwith %}
+          <div class="progress mt-1" style="height:4px;">
+            {% with total=p.lines.count paid_count=p.lines.all|length %}
+            <div class="progress-bar bg-success" style="width:{% if total %}{{ p.lines.filter.count|default:0 }}{% else %}0{% endif %}%;"></div>
+            {% endwith %}
+          </div>
+        </td>
+        <td><a href="{% url 'accounting:year_end_detail' p.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="text-center text-muted py-4">No year-end payouts recorded yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

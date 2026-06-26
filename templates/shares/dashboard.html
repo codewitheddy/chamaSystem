@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Share Capital{% endblock %}
+{% block page_title %}Share Capital{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+    <div class="col-sm-4">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-blue"><i class="bi bi-grid-3x3-gap"></i></div>
+                <div>
+                    <div class="stat-label">Total Shares Issued</div>
+                    <div class="stat-value">{{ total_shares }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-green"><i class="bi bi-cash-stack"></i></div>
+                <div>
+                    <div class="stat-label">Total Share Capital</div>
+                    <div class="stat-value text-success">KES {{ total_capital|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-purple"><i class="bi bi-people"></i></div>
+                <div>
+                    <div class="stat-label">Par Value / Share</div>
+                    <div class="stat-value">KES {{ config.par_value|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-grid-3x3-gap me-2"></i>Member Share Accounts</span>
+        <a href="{% url 'shares:config' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-gear me-1"></i>Configure
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Member</th>
+                        <th class="text-end">Shares Held</th>
+                        <th class="text-end">Share Value (KES)</th>
+                        <th class="text-end">Max Loan (×{{ config.loan_multiplier }})</th>
+                        <th>Standing</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for acct in accounts %}
+                    <tr>
+                        <td>{{ acct.member.name }}</td>
+                        <td class="text-end">{{ acct.shares_held }}</td>
+                        <td class="text-end">{{ acct.share_value|floatformat:2 }}</td>
+                        <td class="text-end">{{ acct.max_loan_from_shares|floatformat:2 }}</td>
+                        <td>
+                            {% if acct.is_in_good_standing %}
+                            <span class="badge bg-success">Good</span>
+                            {% else %}
+                            <span class="badge bg-danger">Below Min</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'shares:member_account' acct.member.pk %}" class="btn btn-sm btn-outline-primary py-0 px-2">View</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">No share accounts yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

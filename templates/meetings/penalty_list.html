@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% block title %}Penalties{% endblock %}
+{% block page_title %}Meeting Penalties{% endblock %}
+
+{% block content %}
+
+<!-- Stat cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-4">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-rose"><i class="bi bi-exclamation-triangle"></i></div>
+                <div>
+                    <div class="stat-label">Total Penalties</div>
+                    <div class="stat-value">{{ total_count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-amber"><i class="bi bi-cash"></i></div>
+                <div>
+                    <div class="stat-label">Total Amount</div>
+                    <div class="stat-value">KES {{ total_amount|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-box accent-green"><i class="bi bi-check-circle"></i></div>
+                <div>
+                    <div class="stat-label">Collected / Outstanding</div>
+                    <div class="stat-value" style="font-size:1.1rem;">
+                        <span style="color:#16a34a;">KES {{ paid_amount|floatformat:2 }}</span>
+                        <span class="text-muted fw-normal" style="font-size:0.85rem;"> / KES {{ unpaid_amount|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters + Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span><i class="bi bi-funnel me-2"></i>All Penalties</span>
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+        <form method="get" class="d-flex gap-2 flex-wrap align-items-center">
+            <select name="member" class="form-select form-select-sm" style="width:auto;">
+                <option value="">All Members</option>
+                {% for m in members %}
+                <option value="{{ m.pk }}" {% if filter_member == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="reason" class="form-select form-select-sm" style="width:auto;">
+                <option value="">All Reasons</option>
+                {% for val, label in reason_choices %}
+                <option value="{{ val }}" {% if filter_reason == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <select name="paid" class="form-select form-select-sm" style="width:auto;">
+                <option value="">All Status</option>
+                <option value="0" {% if filter_paid == '0' %}selected{% endif %}>Unpaid</option>
+                <option value="1" {% if filter_paid == '1' %}selected{% endif %}>Paid</option>
+            </select>
+            <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+            {% if filter_member or filter_reason or filter_paid %}
+            <a href="{% url 'meetings:penalty_list' %}" class="btn btn-sm btn-outline-secondary">Clear</a>
+            {% endif %}
+        </form>
+        <div class="d-flex gap-2">
+            <a href="{% url 'meetings:penalty_list_print' %}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-printer me-1"></i>Print
+            </a>
+            <a href="{% url 'meetings:penalty_list_csv' %}" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-filetype-csv me-1"></i>CSV
+            </a>
+        </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Member</th>
+                    <th>Meeting</th>
+                    <th>Date</th>
+                    <th>Reason</th>
+                    <th>Detail</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in penalties %}
+                <tr>
+                    <td class="text-muted">{{ forloop.counter }}</td>
+                    <td class="fw-semibold">{{ p.member.name }}</td>
+                    <td>
+                        <a href="{% url 'meetings:detail' p.meeting.pk %}" class="text-decoration-none">
+                            {{ p.meeting.title }}
+                        </a>
+                    </td>
+                    <td class="text-muted small">{{ p.meeting.date }}</td>
+                    <td>
+                        <span class="badge
+                            {% if p.reason == 'late' %}bg-warning text-dark
+                            {% elif p.reason == 'absent' %}bg-danger
+                            {% elif p.reason == 'misconduct' %}bg-dark
+                            {% elif p.reason == 'phone' %}bg-secondary
+                            {% else %}bg-info text-dark{% endif %}">
+                            {{ p.get_reason_display }}
+                        </span>
+                    </td>
+                    <td class="text-muted small">{{ p.description|default:"—" }}</td>
+                    <td class="fw-semibold">KES {{ p.amount|floatformat:2 }}</td>
+                    <td>
+                        {% if p.paid %}
+                            <span class="badge" style="background:#f0fdf4;color:#16a34a;">Paid</span>
+                        {% else %}
+                            <span class="badge" style="background:#fff1f2;color:#e11d48;">Unpaid</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <form method="post" action="{% url 'meetings:penalty_toggle' p.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-secondary" style="padding:2px 8px;font-size:0.75rem;"
+                                    title="{% if p.paid %}Mark unpaid{% else %}Mark paid{% endif %}">
+                                <i class="bi bi-arrow-repeat"></i>
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'meetings:penalty_delete' p.pk %}" class="d-inline"
+                              onsubmit="return confirm('Remove this penalty?')">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger" style="padding:2px 8px;font-size:0.75rem;">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center py-5 text-muted">
+                        <i class="bi bi-check-circle" style="font-size:2rem;display:block;margin-bottom:0.5rem;color:#16a34a;"></i>
+                        No penalties recorded{% if filter_member or filter_reason or filter_paid %} matching your filters{% endif %}.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if is_paginated %}
+    <div class="card-body border-top d-flex justify-content-center">
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filter_member %}&member={{ filter_member }}{% endif %}{% if filter_reason %}&reason={{ filter_reason }}{% endif %}{% if filter_paid %}&paid={{ filter_paid }}{% endif %}">Previous</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filter_member %}&member={{ filter_member }}{% endif %}{% if filter_reason %}&reason={{ filter_reason }}{% endif %}{% if filter_paid %}&paid={{ filter_paid }}{% endif %}">Next</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

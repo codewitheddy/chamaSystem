@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+<div class="col-lg-6">
+<div class="card mb-3">
+    <div class="card-header"><i class="bi bi-building me-2"></i>Chama Details</div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data" id="main-form">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="mb-3">
+                {% if field.field.widget.input_type == 'checkbox' %}
+                <div class="form-check">
+                    {{ field }}
+                    <label class="form-check-label ms-1">{{ field.label }}</label>
+                </div>
+                {% else %}
+                <label class="form-label fw-semibold small">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                {% endif %}
+                {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+            </div>
+            {% endfor %}
+            {% if not chama %}
+            <hr>
+            <h6 class="fw-semibold mb-3">First Admin Account</h6>
+            {% for field in provision_form %}
+            <div class="mb-3">
+                <label class="form-label fw-semibold small">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+            </div>
+            {% endfor %}
+            {% endif %}
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="{% url 'tenants:dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+</div>
+{% endblock %}

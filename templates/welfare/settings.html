@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Welfare Fund Settings{% endblock %}
+{% block page_title %}Welfare Fund Settings{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-7">
+<form method="post">
+    {% csrf_token %}
+
+    <!-- Default Rate -->
+    <div class="card mb-3">
+        <div class="card-header fw-semibold"><i class="bi bi-gear me-2"></i>General Settings</div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label fw-semibold small">Default Contribution per Event (KES)</label>
+                {{ form.standard_contribution }}
+                <div class="form-text">Used for any claim type that doesn't have a specific rate set below.</div>
+                {% if form.standard_contribution.errors %}<div class="text-danger small mt-1">{{ form.standard_contribution.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="mb-3 d-flex align-items-center gap-2">
+                {{ form.is_active }}
+                <label class="form-check-label fw-semibold small">Fund is Active</label>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold small">Notes</label>
+                {{ form.notes }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Per-Type Rates -->
+    <div class="card mb-3">
+        <div class="card-header fw-semibold">
+            <i class="bi bi-sliders me-2"></i>Contribution Rates by Claim Type
+            <span class="text-muted fw-normal small ms-1">— leave blank to use the default above</span>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <label class="form-label fw-semibold small">
+                        <i class="bi bi-hospital me-1 text-primary"></i>Hospitalisation (KES)
+                    </label>
+                    {{ form.rate_hospital }}
+                    {% if form.rate_hospital.errors %}<div class="text-danger small mt-1">{{ form.rate_hospital.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-sm-6">
+                    <label class="form-label fw-semibold small">
+                        <i class="bi bi-flower1 me-1 text-secondary"></i>Funeral / Bereavement (KES)
+                    </label>
+                    {{ form.rate_funeral }}
+                    {% if form.rate_funeral.errors %}<div class="text-danger small mt-1">{{ form.rate_funeral.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-sm-6">
+                    <label class="form-label fw-semibold small">
+                        <i class="bi bi-heart-pulse me-1 text-pink"></i>Maternity (KES)
+                    </label>
+                    {{ form.rate_maternity }}
+                    {% if form.rate_maternity.errors %}<div class="text-danger small mt-1">{{ form.rate_maternity.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-sm-6">
+                    <label class="form-label fw-semibold small">
+                        <i class="bi bi-person-wheelchair me-1 text-warning"></i>Disability (KES)
+                    </label>
+                    {{ form.rate_disability }}
+                    {% if form.rate_disability.errors %}<div class="text-danger small mt-1">{{ form.rate_disability.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-sm-6">
+                    <label class="form-label fw-semibold small">
+                        <i class="bi bi-three-dots me-1 text-muted"></i>Other (KES)
+                    </label>
+                    {{ form.rate_other }}
+                    {% if form.rate_other.errors %}<div class="text-danger small mt-1">{{ form.rate_other.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Rates Summary -->
+    <div class="card mb-3">
+        <div class="card-header fw-semibold text-muted small"><i class="bi bi-info-circle me-2"></i>Current Effective Rates</div>
+        <div class="card-body p-0">
+            <table class="table table-sm mb-0">
+                <thead class="table-light">
+                    <tr><th>Claim Type</th><th class="text-end">Rate (KES)</th><th>Source</th></tr>
+                </thead>
+                <tbody style="font-size:.85rem;">
+                    {% for label, rate, specific in rate_summary %}
+                    <tr>
+                        <td>{{ label }}</td>
+                        <td class="text-end fw-semibold">{{ rate|floatformat:2 }}</td>
+                        <td class="text-muted">{% if specific %}<span class="badge bg-success-subtle text-success">Custom</span>{% else %}<span class="badge bg-secondary-subtle text-secondary">Default</span>{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Save Settings</button>
+        <a href="{% url 'welfare:dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+</form>
+</div>
+</div>
+{% endblock %}

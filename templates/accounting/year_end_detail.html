@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Year-End Payout {{ payout.year }}{% endblock %}
+{% block page_title %}Year-End Payout — {{ payout.year }}{% endblock %}
+
+{% block content %}
+
+<!-- Summary -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-3">
+    <div class="card stat-card">
+      <div class="card-body py-3">
+        <div class="stat-label">Year</div>
+        <div class="stat-value">{{ payout.year }}</div>
+        <div style="font-size:.72rem;color:#94a3b8;">{{ payout.payout_date }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-3">
+    <div class="card stat-card">
+      <div class="card-body py-3">
+        <div class="stat-label">Total Distributed</div>
+        <div class="stat-value text-success">KES {{ payout.total_distributed|floatformat:2 }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-3">
+    <div class="card stat-card">
+      <div class="card-body py-3">
+        <div class="stat-label">Members</div>
+        <div class="stat-value">{{ payout.lines.count }}</div>
+        <div style="font-size:.72rem;color:#16a34a;">{{ payout.lines.filter.count }} paid</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-3">
+    <div class="card stat-card">
+      <div class="card-body py-3">
+        <div class="stat-label">Income Pool</div>
+        <div class="stat-value">KES {{ payout.total_income_pool|floatformat:2 }}</div>
+        <div style="font-size:.72rem;color:#94a3b8;">profit distributed</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if payout.notes %}
+<div class="alert alert-light mb-3"><i class="bi bi-sticky me-1"></i>{{ payout.notes }}</div>
+{% endif %}
+
+<!-- Per-member lines -->
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-people me-2"></i>Member Payouts</span>
+    <button onclick="window.print()" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-printer me-1"></i>Print
+    </button>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle">
+      <thead>
+        <tr>
+          <th>Member</th>
+          <th class="text-end">Contributions</th>
+          <th class="text-end">Profit Share</th>
+          <th class="text-end">Deductions</th>
+          <th class="text-end">Net Payout</th>
+          <th>Status</th>
+          <th>Reference</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for line in payout.lines.all %}
+      <tr {% if line.is_paid %}class="table-success"{% endif %}>
+        <td class="fw-semibold">{{ line.member.name }}</td>
+        <td class="text-end">KES {{ line.contributions|floatformat:2 }}</td>
+        <td class="text-end text-success">KES {{ line.profit_share|floatformat:2 }}</td>
+        <td class="text-end text-danger">
+          {% if line.loan_deduction or line.penalty_deduction %}
+          -KES {{ line.loan_deduction|add:line.penalty_deduction|floatformat:2 }}
+          {% else %}—{% endif %}
+        </td>
+        <td class="text-end fw-bold {% if line.is_paid %}text-success{% endif %}">
+          KES {{ line.net_payout|floatformat:2 }}
+        </td>
+        <td>
+          {% if line.is_paid %}
+          <span class="badge bg-success">Paid</span>
+          <div class="text-muted small">{{ line.get_payment_method_display }}</div>
+          {% else %}
+          <span class="badge bg-warning text-dark">Pending</span>
+          {% endif %}
+        </td>
+        <td class="text-muted small">{{ line.payment_ref|default:"—" }}</td>
+        <td>
+          {% if not line.is_paid and user.profile.is_admin %}
+          <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal"
+                  data-bs-target="#payModal{{ line.pk }}">
+            <i class="bi bi-check-lg"></i> Mark Paid
+          </button>
+          <!-- Modal -->
+          <div class="modal fade" id="payModal{{ line.pk }}" tabindex="-1">
+            <div class="modal-dialog modal-sm">
+              <div class="modal-content">
+                <div class="modal-header py-2">
+                  <h6 class="modal-title">Mark Paid — {{ line.member.name }}</h6>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" action="{% url 'accounting:year_end_mark_paid' payout.pk line.pk %}">
+                  {% csrf_token %}
+                  <div class="modal-body">
+                    <div class="mb-2">
+                      <label class="form-label small fw-semibold">Amount</label>
+                      <div class="fw-bold text-success">KES {{ line.net_payout|floatformat:2 }}</div>
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label small fw-semibold">Method</label>
+                      <select name="payment_method" class="form-select form-select-sm">
+                        <option value="mpesa">M-Pesa</option>
+                        <option value="cash">Cash</option>
+                        <option value="bank">Bank Transfer</option>
+                      </select>
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label small fw-semibold">Reference</label>
+                      <input type="text" name="payment_ref" class="form-control form-control-sm"
+                             placeholder="M-Pesa code / receipt">
+                    </div>
+                  </div>
+                  <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-success">Confirm</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+      <tfoot class="table-light">
+        <tr>
+          <td colspan="4" class="fw-bold text-end">Total</td>
+          <td class="fw-bold text-success text-end">KES {{ payout.total_distributed|floatformat:2 }}</td>
+          <td colspan="3"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+<div class="mt-3">
+  <a href="{% url 'accounting:year_end_list' %}" class="btn btn-outline-secondary btn-sm">← Back</a>
+</div>
+{% endblock %}

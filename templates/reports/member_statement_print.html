@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Member Statement &mdash; {{ member.name }}</title>
+<style>
+/* ── A4 page setup ── */
+@page {
+  size: A4 portrait;
+  margin: 18mm 15mm 18mm 15mm;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  color: #1e293b;
+  background: #fff;
+}
+
+/* ── Screen wrapper (A4 preview on screen) ── */
+.page {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 18mm 15mm;
+  background: #fff;
+}
+
+/* ── Print toolbar (hidden when printing) ── */
+.toolbar {
+  width: 210mm;
+  margin: 12px auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.btn-print {
+  background: #1e3a5f;
+  color: #fff;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-print:hover { background: #162d4a; }
+.btn-close {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  padding: 8px 16px;
+  border-radius: 5px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* ── Header ── */
+.doc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 2.5px solid #1e3a5f;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+.org-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e3a5f;
+  letter-spacing: -0.3px;
+}
+.org-sub {
+  font-size: 10px;
+  color: #64748b;
+  margin-top: 2px;
+}
+.doc-title {
+  text-align: right;
+}
+.doc-title h1 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e3a5f;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.doc-title .doc-date {
+  font-size: 10px;
+  color: #64748b;
+  margin-top: 3px;
+}
+
+/* ── Member info box ── */
+.member-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px 16px;
+}
+.member-box .field label {
+  font-size: 9px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 1px;
+}
+.member-box .field span {
+  font-size: 11px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* ── Summary strip ── */
+.summary-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.sum-box {
+  background: #1e3a5f;
+  color: #fff;
+  border-radius: 5px;
+  padding: 8px 10px;
+  text-align: center;
+}
+.sum-box .sum-label {
+  font-size: 8.5px;
+  color: rgba(255,255,255,0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 3px;
+}
+.sum-box .sum-val {
+  font-size: 12px;
+  font-weight: 700;
+}
+.sum-box.green { background: #166534; }
+.sum-box.red   { background: #991b1b; }
+.sum-box.amber { background: #92400e; }
+
+/* ── Section headings ── */
+.section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1e3a5f;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1.5px solid #1e3a5f;
+  padding-bottom: 3px;
+  margin: 14px 0 6px;
+}
+
+/* ── Tables ── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10.5px;
+}
+thead th {
+  background: #1e3a5f;
+  color: #fff;
+  padding: 5px 7px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+tbody td {
+  padding: 4px 7px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: top;
+}
+tbody tr:nth-child(even) td { background: #f8fafc; }
+tfoot td {
+  padding: 5px 7px;
+  font-weight: 700;
+  background: #f1f5f9;
+  border-top: 1.5px solid #1e3a5f;
+}
+.text-right { text-align: right; }
+.text-muted { color: #94a3b8; font-style: italic; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 9.5px;
+  font-weight: 600;
+}
+.badge-green { background: #dcfce7; color: #166534; }
+.badge-red   { background: #fee2e2; color: #991b1b; }
+.badge-amber { background: #fef3c7; color: #92400e; }
+.badge-gray  { background: #f1f5f9; color: #475569; }
+
+/* ── Footer ── */
+.doc-footer {
+  margin-top: 20px;
+  padding-top: 8px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  font-size: 9.5px;
+  color: #94a3b8;
+}
+
+/* ── Page breaks ── */
+.page-break { page-break-before: always; }
+table { page-break-inside: auto; }
+tr { page-break-inside: avoid; }
+
+/* ── Print: hide toolbar, remove shadow ── */
+@media print {
+  .toolbar { display: none !important; }
+  body { background: #fff; }
+  .page { margin: 0; padding: 0; width: 100%; box-shadow: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- PRINT TOOLBAR -->
+<div class="toolbar">
+  <button class="btn-print" onclick="window.print()">
+    &#128438; Print / Save as PDF
+  </button>
+  <button class="btn-close" onclick="window.close()">&#10005; Close</button>
+  <span style="font-size:12px;color:#64748b;margin-left:4px;">
+    Tip: In the print dialog, choose <strong>Save as PDF</strong> and set paper size to <strong>A4</strong>.
+  </span>
+</div>
+
+<!-- A4 PAGE -->
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="doc-header">
+    <div>
+      <div class="org-name">
+        {% if request.chama %}{{ request.chama.name }}{% else %}Chama System{% endif %}
+      </div>
+      <div class="org-sub">Member Account Statement</div>
+    </div>
+    <div class="doc-title">
+      <h1>Account Statement</h1>
+      <div class="doc-date">Generated: {% now "d M Y, H:i" %}</div>
+    </div>
+  </div>
+
+  <!-- MEMBER INFO -->
+  <div class="member-box">
+    <div class="field"><label>Full Name</label><span>{{ member.name }}</span></div>
+    <div class="field"><label>Phone</label><span>{{ member.phone }}</span></div>
+    <div class="field"><label>Status</label><span>{{ member.get_status_display }}</span></div>
+    <div class="field"><label>Date Joined</label><span>{{ member.date_joined }}</span></div>
+    {% if member.email %}<div class="field"><label>Email</label><span>{{ member.email }}</span></div>{% endif %}
+    <div class="field"><label>Reg. Fee</label><span>KES {{ member.registration_fee|floatformat:2 }}</span></div>
+  </div>
+
+  <!-- SUMMARY STRIP -->
+  <div class="summary-strip">
+    <div class="sum-box green">
+      <div class="sum-label">Total Contributions</div>
+      <div class="sum-val">KES {{ member.total_contributions|floatformat:2 }}</div>
+    </div>
+    <div class="sum-box">
+      <div class="sum-label">Total Loans</div>
+      <div class="sum-val">KES {{ member.total_loans|floatformat:2 }}</div>
+    </div>
+    <div class="sum-box red">
+      <div class="sum-label">Loan Balance</div>
+      <div class="sum-val">KES {{ member.total_loan_balance|floatformat:2 }}</div>
+    </div>
+    <div class="sum-box amber">
+      <div class="sum-label">Unpaid Penalties</div>
+      <div class="sum-val">KES {{ member.unpaid_penalties|floatformat:2 }}</div>
+    </div>
+    <div class="sum-box">
+      <div class="sum-label">Profit Share</div>
+      <div class="sum-val">KES {{ profit_share.member_profit|floatformat:2 }}</div>
+    </div>
+  </div>
+
+  <!-- CONTRIBUTIONS -->
+  <div class="section-title">Contributions</div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Month</th><th>Year</th>
+        <th class="text-right">Amount (KES)</th>
+        <th>Date</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in contributions %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ c.get_month_display }}</td>
+        <td>{{ c.year }}</td>
+        <td class="text-right">{{ c.amount|floatformat:2 }}</td>
+        <td>{{ c.date }}</td>
+        <td>
+          {% if c.is_voided %}
+            <span class="badge badge-gray">Voided</span>
+          {% else %}
+            <span class="badge badge-green">Valid</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="text-muted">No contributions recorded.</td></tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="3">Total</td>
+        <td class="text-right">{{ member.total_contributions|floatformat:2 }}</td>
+        <td colspan="2"></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- LOANS -->
+  <div class="section-title">Loans</div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Date</th>
+        <th class="text-right">Principal</th>
+        <th class="text-right">Interest</th>
+        <th class="text-right">Total</th>
+        <th class="text-right">Paid</th>
+        <th class="text-right">Balance</th>
+        <th>Due</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for l in loans %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ l.date_taken }}</td>
+        <td class="text-right">{{ l.loan_amount|floatformat:2 }}</td>
+        <td class="text-right">{{ l.interest_amount|floatformat:2 }}</td>
+        <td class="text-right">{{ l.total_payable|floatformat:2 }}</td>
+        <td class="text-right">{{ l.amount_paid|floatformat:2 }}</td>
+        <td class="text-right">{{ l.balance|floatformat:2 }}</td>
+        <td>{{ l.due_date|default:"&mdash;" }}</td>
+        <td>
+          {% if l.status == 'cleared' %}<span class="badge badge-green">Cleared</span>
+          {% elif l.status == 'late' %}<span class="badge badge-red">Late</span>
+          {% else %}<span class="badge badge-amber">Active</span>{% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="9" class="text-muted">No loans recorded.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- LOAN PAYMENTS -->
+  <div class="section-title">Loan Repayments</div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Date</th>
+        <th class="text-right">Loan Amount</th>
+        <th class="text-right">Payment</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in payments %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ p.date }}</td>
+        <td class="text-right">{{ p.loan.loan_amount|floatformat:2 }}</td>
+        <td class="text-right">{{ p.amount|floatformat:2 }}</td>
+        <td>{{ p.notes|default:"&mdash;" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="text-muted">No repayments recorded.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- PENALTIES -->
+  <div class="section-title">Penalties</div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Meeting</th><th>Date</th><th>Reason</th>
+        <th class="text-right">Amount</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in penalties %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ p.meeting.title }}</td>
+        <td>{{ p.meeting.date }}</td>
+        <td>{{ p.get_reason_display }}</td>
+        <td class="text-right">{{ p.amount|floatformat:2 }}</td>
+        <td>
+          {% if p.paid %}<span class="badge badge-green">Paid</span>
+          {% else %}<span class="badge badge-red">Unpaid</span>{% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="text-muted">No penalties recorded.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- GUARANTEES -->
+  <div class="section-title">Loans Guaranteed</div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Borrower</th>
+        <th class="text-right">Loan Amount</th>
+        <th class="text-right">Guaranteed</th>
+        <th class="text-right">Loan Balance</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for g in guarantees %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ g.loan.member.name }}</td>
+        <td class="text-right">{{ g.loan.loan_amount|floatformat:2 }}</td>
+        <td class="text-right">{{ g.amount_guaranteed|floatformat:2 }}</td>
+        <td class="text-right">{{ g.loan.balance|floatformat:2 }}</td>
+        <td>
+          {% if g.loan.status == 'cleared' %}<span class="badge badge-green">Cleared</span>
+          {% elif g.loan.status == 'late' %}<span class="badge badge-red">Late</span>
+          {% else %}<span class="badge badge-amber">Active</span>{% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="text-muted">Not guaranteeing any loans.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- FOOTER -->
+  <div class="doc-footer">
+    <span>
+      {% if request.chama %}{{ request.chama.name }} &mdash; {% endif %}
+      Confidential Member Statement
+    </span>
+    <span>Generated: {% now "d M Y H:i" %} &nbsp;|&nbsp; Chama System</span>
+  </div>
+
+</div><!-- /.page -->
+</body>
+</html>

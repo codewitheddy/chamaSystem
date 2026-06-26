@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Journal Entries{% endblock %}
+{% block page_title %}Journal Entries{% endblock %}
+
+{% block content %}
+{% include "ledger/date_filter.html" %}
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-journal-bookmark me-2"></i>Journal — {{ total_entries }} entries</span>
+        <button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer me-1"></i>Print</button>
+    </div>
+    {% for entry in entries %}
+    <div class="card-body border-bottom py-3">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+                <span class="fw-semibold">{{ entry.date }}</span>
+                <span class="badge bg-secondary ms-2">{{ entry.reference|default:"—" }}</span>
+                {% if not entry.is_balanced %}<span class="badge bg-danger ms-1">Unbalanced!</span>{% endif %}
+            </div>
+            <span class="text-muted small">JE-{{ entry.pk|stringformat:"04d" }}</span>
+        </div>
+        <div class="text-muted small mb-2">{{ entry.description }}</div>
+        <table class="table table-sm mb-0" style="font-size:.82rem;">
+            <thead><tr><th>Account</th><th>Memo</th><th class="text-end">Debit</th><th class="text-end">Credit</th></tr></thead>
+            <tbody>
+            {% for line in entry.lines.all %}
+            <tr>
+                <td>{{ line.account.code }} — {{ line.account.name }}</td>
+                <td class="text-muted">{{ line.memo|default:"—" }}</td>
+                <td class="text-end text-success">{% if line.side == 'debit' %}KES {{ line.amount|floatformat:2 }}{% endif %}</td>
+                <td class="text-end text-danger">{% if line.side == 'credit' %}KES {{ line.amount|floatformat:2 }}{% endif %}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+            <tfoot class="table-light">
+                <tr>
+                    <td colspan="2" class="text-end fw-semibold">Totals</td>
+                    <td class="text-end fw-bold text-success">KES {{ entry.total_debits|floatformat:2 }}</td>
+                    <td class="text-end fw-bold text-danger">KES {{ entry.total_credits|floatformat:2 }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    {% empty %}
+    <div class="card-body text-center text-muted py-4">No journal entries in this period.</div>
+    {% endfor %}
+</div>
+{% include "includes/pagination.html" with page_obj=page_obj %}
+{% endblock %}

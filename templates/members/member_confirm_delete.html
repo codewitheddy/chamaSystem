@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Delete {{ member.name }}{% endblock %}
+{% block page_title %}Delete Member{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-body text-center py-4">
+                {% if can_delete %}
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                     style="width:64px;height:64px;background:#fff1f2;">
+                    <i class="bi bi-trash" style="font-size:2rem;color:#e11d48;"></i>
+                </div>
+                <h5 class="fw-bold mb-1">Delete {{ member.name }}?</h5>
+                <p class="text-muted small mb-3">
+                    This member has no loans or contributions. Deleting is permanent and cannot be undone.
+                </p>
+                <form method="post" class="d-flex gap-2 justify-content-center">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                    <a href="{% url 'members:detail' member.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                </form>
+                {% else %}
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                     style="width:64px;height:64px;background:#fffbeb;">
+                    <i class="bi bi-exclamation-triangle" style="font-size:2rem;color:#d97706;"></i>
+                </div>
+                <h5 class="fw-bold mb-1">Cannot Delete {{ member.name }}</h5>
+                <p class="text-muted small mb-2">This member has existing records:</p>
+                <ul class="list-unstyled text-muted small mb-3">
+                    {% if has_loans %}<li><i class="bi bi-x-circle text-danger me-1"></i>Has loan records</li>{% endif %}
+                    {% if has_contributions %}<li><i class="bi bi-x-circle text-danger me-1"></i>Has contribution records</li>{% endif %}
+                </ul>
+                <p class="text-muted small mb-3">
+                    To remove this member from active use, <strong>disable</strong> them instead.
+                    Their financial history will be preserved.
+                </p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <a href="{% url 'members:disable' member.pk %}" class="btn btn-warning">
+                        <i class="bi bi-person-slash me-1"></i>Disable Instead
+                    </a>
+                    <a href="{% url 'members:detail' member.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

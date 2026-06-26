@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}{% if form.instance.pk %}Edit Expense{% else %}Add Expense{% endif %}{% endblock %}
+{% block page_title %}{% if form.instance.pk %}Edit Expense{% else %}Add Expense{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-bag-dash me-2"></i>Expense Details</div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-500">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors.0 }}</div>{% endif %}
+                    </div>
+                    {% endfor %}
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">Save Expense</button>
+                        <a href="{% url 'accounting:expenses' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
