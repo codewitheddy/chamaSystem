@@ -359,15 +359,19 @@ class SubscriptionView(LoginRequiredMixin, View):
         if not profile or not profile.is_admin:
             return redirect('dashboard:dashboard')
 
-        paybill = getattr(settings, 'MPESA_PAYBILL', '400200')
+        paybill = getattr(settings, 'MPESA_PAYBILL', '')
+        till_number = getattr(settings, 'MPESA_TILL_NUMBER', '')
         account = f"{getattr(settings, 'MPESA_ACCOUNT_PREFIX', 'CHAMA')}-{chama.slug.upper()}"
         billing_email = getattr(settings, 'BILLING_CONTACT_EMAIL', 'billing@chamasystem.co.ke')
         billing_phone = getattr(settings, 'BILLING_CONTACT_PHONE', '')
+        account_name = getattr(settings, 'MPESA_ACCOUNT_PREFIX', '')
 
         return render(request, 'tenants/subscription.html', {
             'chama': chama,
             'paybill': paybill,
+            'till_number': till_number,
             'account': account,
+            'account_name': account_name,
             'billing_email': billing_email,
             'billing_phone': billing_phone,
             'plan_choices': [
@@ -484,4 +488,50 @@ class ChamaResetPasswordView(View):
             request,
             f"Password reset for {chama.name} admin ({admin_profile.user.username})."
         )
+        return redirect('tenants:dashboard')
+
+
+@staff_required
+class ChamaDeleteView(View):
+    """Permanently delete a chama and all its data — superadmin only."""
+
+    def get(self, request, pk):
+        """Show confirmation page with a summary of what will be deleted."""
+        chama = get_object_or_404(Chama, pk=pk)
+        from members.models import Member
+        from contributions.models import Contribution
+        from loans.models import Loan
+        member_count = Member.objects.filter(chama=chama).count()
+        contribution_count = Contribution.objects.filter(member__chama=chama).count()
+        loan_count = Loan.objects.filter(member__chama=chama).count()
+        return render(request, 'tenants/chama_confirm_delete.html', {
+            'chama': chama,
+            'member_count': member_count,
+            'contribution_count': contribution_count,
+            'loan_count': loan_count,
+        })
+
+    def post(self, request, pk):
+        chama = get_object_or_404(Chama, pk=pk)
+        # Require typing the chama slug to confirm
+        confirm = request.POST.get('confirm_slug', '').strip()
+        if confirm != chama.slug:
+            messages.error(
+                request,
+                f"Confirmation failed. Type '{chama.slug}' exactly to delete."
+            )
+            return redirect('tenants:delete', pk=pk)
+
+        name = chama.name
+        # Delete all linked user profiles first so their User accounts aren't orphaned
+        from accounts.models import UserProfile
+        from django.contrib.auth.models import User
+        user_ids = list(
+            UserProfile.objects.filter(chama=chama).values_list('user_id', flat=True)
+        )
+        chama.delete()  # cascades members, contributions, loans, etc.
+        # Delete the actual User accounts that belonged only to this chama
+        User.objects.filter(pk__in=user_ids, is_staff=False).delete()
+
+        messages.success(request, f"'{name}' and all its data have been permanently deleted.")
         return redirect('tenants:dashboard')

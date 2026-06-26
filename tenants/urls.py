@@ -15,6 +15,7 @@ urlpatterns = [
     path('superadmin/<int:pk>/plan/', views.ChamaPlanView.as_view(), name='plan'),
     path('superadmin/payments/<int:pk>/verify/', views.PaymentVerifyView.as_view(), name='payment_verify'),
     path('superadmin/<int:pk>/reset-password/', views.ChamaResetPasswordView.as_view(), name='reset_password'),
+    path('superadmin/<int:pk>/delete/', views.ChamaDeleteView.as_view(), name='delete'),
     # Chama self-service subscription
     path('subscription/', views.SubscriptionView.as_view(), name='subscription'),
     path('subscription/submit/', views.SubscriptionPaymentSubmitView.as_view(), name='subscription_submit'),

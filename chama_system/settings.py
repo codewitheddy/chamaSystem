@@ -198,7 +198,8 @@ AXES_VERBOSE = False
 ADMIN_URL = config('ADMIN_URL', default='admin')
 
 # ── Billing / Subscription ────────────────────────────────────────────────────
-MPESA_PAYBILL = config('MPESA_PAYBILL', default='400200')
+MPESA_PAYBILL = config('MPESA_PAYBILL', default='')
+MPESA_TILL_NUMBER = config('MPESA_TILL_NUMBER', default='')
 MPESA_ACCOUNT_PREFIX = config('MPESA_ACCOUNT_PREFIX', default='CHAMA')
 BILLING_CONTACT_EMAIL = config('BILLING_CONTACT_EMAIL', default='billing@chamasystem.co.ke')
 BILLING_CONTACT_PHONE = config('BILLING_CONTACT_PHONE', default='+254700000000')
