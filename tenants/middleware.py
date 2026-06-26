@@ -84,7 +84,13 @@ class TenantMiddleware:
             return None
 
         try:
-            return Chama.objects.get(slug=subdomain, is_active=True)
+            from django.core.cache import cache
+            cache_key = f'chama_slug_{subdomain}'
+            chama = cache.get(cache_key)
+            if chama is None:
+                chama = Chama.objects.get(slug=subdomain, is_active=True)
+                cache.set(cache_key, chama, timeout=300)  # cache 5 minutes
+            return chama
         except Chama.DoesNotExist:
             if settings.DEBUG:
                 try:
