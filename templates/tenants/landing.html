@@ -226,7 +226,9 @@ body{font-family:'Inter',system-ui,sans-serif;color:#1a1a2e;background:#fff;over
 <!-- NAVBAR -->
 <nav class="topnav">
   <div class="topnav-inner">
-    <a href="/" class="topnav-brand">Chama<span>System</span></a>
+    <a href="/" class="topnav-brand">
+      {% load static %}<img src="{% static 'logo.png' %}" alt="ChamaSystem" style="height:38px;width:auto;vertical-align:middle;">
+    </a>
     <div class="topnav-links">
       <a href="#features">Features</a>
       <a href="#how">How it works</a>

@@ -13,9 +13,9 @@ from .forms import PostForm, CommentForm
 
 def _get_post(request, pk):
     chama = getattr(request, 'chama', None)
-    if chama:
-        return get_object_or_404(Post, pk=pk, chama=chama)
-    return get_object_or_404(Post, pk=pk)
+    if chama is None:
+        raise PermissionDenied
+    return get_object_or_404(Post, pk=pk, chama=chama)
 
 
 def _treasurer(user):
@@ -222,9 +222,9 @@ class PostCloseView(LoginRequiredMixin, View):
 class MarkAllReadView(LoginRequiredMixin, View):
     def get(self, request):
         chama = getattr(request, 'chama', None)
-        qs = Post.objects.all()
-        if chama:
-            qs = qs.filter(chama=chama)
+        if not chama:
+            return redirect('board:board')
+        qs = Post.objects.filter(chama=chama)
         for post in qs:
             PostRead.objects.get_or_create(post=post, user=request.user)
         messages.success(request, "All posts marked as read.")

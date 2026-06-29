@@ -119,7 +119,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
+STATICFILES_DIRS = [BASE_DIR / 'chama_system' / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 # WhiteNoise: compress & cache-bust static files automatically
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

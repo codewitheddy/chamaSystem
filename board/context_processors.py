@@ -6,9 +6,9 @@ def board_unread(request):
     if not request.user.is_authenticated:
         return {'board_unread_count': 0}
     chama = getattr(request, 'chama', None)
-    qs = Post.objects.all()
-    if chama:
-        qs = qs.filter(chama=chama)
+    if not chama:
+        return {'board_unread_count': 0}
+    qs = Post.objects.filter(chama=chama)
     read_ids = PostRead.objects.filter(
         user=request.user
     ).values_list('post_id', flat=True)

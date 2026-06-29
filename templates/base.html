@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -334,7 +335,10 @@
         <div class="brand">
             <div class="d-flex align-items-center justify-content-between">
                 <div>
-                    <h5><i class="bi bi-bank2 me-2"></i>{% if request.chama %}{{ request.chama.name }}{% else %}Chama System{% endif %}</h5>
+                    <h5>
+                        <img src="{% static 'logo.png' %}" alt="Chama System" style="height:36px;width:auto;vertical-align:middle;border-radius:6px;">
+                        {% if request.chama %}<span style="margin-left:8px;">{{ request.chama.name }}</span>{% endif %}
+                    </h5>
                     <small>{% if request.chama %}{{ request.chama.tagline|default:"Table Banking Manager" }}{% else %}Table Banking Manager{% endif %}</small>
                 </div>
                 <button class="d-lg-none btn btn-sm text-muted p-1 ms-2" id="sidebarClose" aria-label="Close navigation" style="line-height:1;">
